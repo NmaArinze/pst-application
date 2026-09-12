@@ -3,6 +3,5 @@ dist/
 .env
 .env.local
 .env.*.local
-convex/_generated/
 .DS_Store
 *.log
