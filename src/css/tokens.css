@@ -1,0 +1,52 @@
+/*
+  PST design tokens.
+  Visual direction: white background, black primary text,
+  orange used sparingly as accent (primary actions, active nav state,
+  the one emphasized figure per view). Sidebar is white/light, not dark,
+  with an orange active-item state — not a large orange surface.
+*/
+
+:root {
+  /* Surfaces */
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-sidebar-bg: #fafafa;
+  --color-border: #e5e5e5;
+  --color-border-strong: #d8d8d8;
+
+  /* Text */
+  --color-text: #111111;
+  --color-text-muted: #5b6472;
+  --color-text-faint: #8a93a1;
+
+  /* Accent — used sparingly: primary buttons, active nav item, one
+     emphasized stat per view. Never a full-surface fill outside those. */
+  --color-accent: #d9591c;
+  --color-accent-hover: #c14d16;
+  --color-accent-soft: #fdece0;
+
+  /* Status (reserved for email/tracking status pills — Phase 8+) */
+  --color-status-neutral: #5b6472;
+  --color-status-success: #1f6f5c;
+  --color-status-warning: #b5701f;
+  --color-status-danger: #c0432b;
+
+  /* Type */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  --sidebar-width: 220px;
+}
