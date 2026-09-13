@@ -1,5 +1,5 @@
 {
   "framework": "vite",
-  "buildCommand": "npx convex deploy --cmd 'npm run build' --cmd-url-env-var-name VITE_CONVEX_URL",
+  "buildCommand": "npx convex codegen --typecheck disable && npx convex deploy --cmd 'npm run build' --cmd-url-env-var-name VITE_CONVEX_URL",
   "outputDirectory": "dist"
 }
