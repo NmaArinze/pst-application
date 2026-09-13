@@ -2,7 +2,8 @@ import { defineConfig } from "vite";
 import { resolve } from "path";
 
 // Vite is used purely as a static-file dev server + bundler for ES modules.
-// It introduces no UI framework and no TypeScript — plain HTML/CSS/JS only.
+// Every HTML page in the app must be listed here as a build input, or
+// Vercel's production build will silently leave it out of dist/.
 export default defineConfig({
   root: ".",
   envPrefix: "VITE_",
@@ -11,6 +12,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
+        login: resolve(__dirname, "login.html"),
       },
     },
   },

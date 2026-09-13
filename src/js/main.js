@@ -2,17 +2,34 @@ import "../css/base.css";
 import { renderSidebar, bindSidebarNav } from "./ui/sidebar.js";
 import { convex, isConvexConfigured } from "./lib/convexClient.js";
 import { api } from "../../convex/_generated/api.js";
+import { requireSession, logout } from "./lib/session.js";
 
-function renderShell() {
+async function init() {
+  const session = await requireSession();
+  if (!session) return; // requireSession already redirected to login.html
+
+  renderShell(session);
+  checkConvexConnection();
+}
+
+function renderShell(session) {
   const app = document.getElementById("app");
 
   app.innerHTML = `
     <div class="app-shell">
       ${renderSidebar("overview")}
       <main class="main">
-        <div class="page-header">
-          <h1>Foundation</h1>
-          <p>Phase 1 — project scaffold. Real screens arrive in later phases.</p>
+        <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            <h1>Foundation</h1>
+            <p>Phase 1/2 — project scaffold + authentication. Real screens arrive in later phases.</p>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:13px;font-weight:500;color:var(--color-text);">${session.name}</div>
+            <button id="logout-btn" class="btn btn--secondary" style="margin-top:6px;padding:5px 12px;font-size:12px;">
+              Log out
+            </button>
+          </div>
         </div>
 
         <div class="panel" style="max-width: 480px;">
@@ -26,15 +43,15 @@ function renderShell() {
           </div>
 
           <p style="font-size:12.5px;color:var(--color-text-faint);margin-top:14px;line-height:1.6;">
-            This page confirms the frontend is deployed and can reach the
-            Convex backend. Login, Participants, Templates, Campaigns and
-            Reports are built in the phases that follow.
+            You are signed in as an authenticated administrator. Participants,
+            Templates, Campaigns and Reports are built in the phases that follow.
           </p>
         </div>
       </main>
     </div>`;
 
   bindSidebarNav(app);
+  document.getElementById("logout-btn").addEventListener("click", logout);
 }
 
 async function checkConvexConnection() {
@@ -55,10 +72,9 @@ async function checkConvexConnection() {
   } catch (err) {
     statusEl.innerHTML = `
       <span class="status-dot status-dot--error"></span>
-      Convex URL is set but not reachable. Run <code>npm run convex:dev</code> to deploy convex/health.ts.`;
+      Convex URL is set but not reachable.`;
     console.error("Convex health check failed:", err);
   }
 }
 
-renderShell();
-checkConvexConnection();
+init();
