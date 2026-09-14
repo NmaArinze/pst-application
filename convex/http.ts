@@ -1,26 +1,36 @@
-/// <reference types="node" />
+/**
+ * convex/http.ts
+ *
+ * PST's public HTTP surface — every route is a real HTTP endpoint at
+ * https://<deployment>.convex.site/... reachable via fetch() from the
+ * frontend, carrying the HttpOnly session cookie.
+ *
+ * WHY THIS EXISTS:
+ * See convex/lib/authHttp.ts and convex/lib/httpHelpers.ts for the
+ * underlying mechanism. This file just declares routes and wires each
+ * one to its internal query/mutation, using authedRoute() to enforce
+ * the locked rule: no business data without a validated session.
+ *
+ * CONNECTS TO:
+ * - convex/auth.ts — login/session/logout (Phase 2)
+ * - convex/participants.ts — participant CRUD (Phase 4)
+ * - convex/lib/authHttp.ts, convex/lib/httpHelpers.ts — shared helpers
+ * - src/js/lib/api.js (frontend) — calls these routes
+ *
+ * Adding a new protected feature in a later phase (templates,
+ * campaigns, etc.) means adding routes here using authedRoute() —
+ * not writing the auth check by hand again.
+ */
 
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
 import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
+import { corsHeaders } from "./lib/authHttp";
+import { json, preflight, authedRoute } from "./lib/httpHelpers";
 
 const SESSION_COOKIE_NAME = "pst_session";
 const SESSION_DURATION_SECONDS = 30 * 60; // matches auth.ts's SESSION_DURATION_MS
-
-// The allowed frontend origin comes from an environment variable, never
-// hardcoded — set via `npx convex env set PST_FRONTEND_ORIGIN <url>`.
-function corsHeaders(origin: string | null) {
-  const allowedOrigin = process.env.PST_FRONTEND_ORIGIN;
-  const headers: Record<string, string> = {
-    "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  };
-  if (allowedOrigin && origin === allowedOrigin) {
-    headers["Access-Control-Allow-Origin"] = allowedOrigin;
-  }
-  return headers;
-}
 
 function parseCookies(header: string | null): Record<string, string> {
   const out: Record<string, string> = {};
@@ -35,91 +45,146 @@ function parseCookies(header: string | null): Record<string, string> {
 
 const http = httpRouter();
 
+// ============================================================
+// AUTH ROUTES (Phase 2) — not wrapped in authedRoute(), since login
+// itself is how a session comes to exist in the first place.
+// ============================================================
+
 http.route({
   path: "/auth/login",
   method: "POST",
   handler: httpAction(async (ctx, request) => {
-    const cors = corsHeaders(request.headers.get("Origin"));
     try {
       const { email, password } = await request.json();
       const result = await ctx.runMutation(internal.auth.login, { email, password });
       const cookie = `${SESSION_COOKIE_NAME}=${result.token}; HttpOnly; Secure; SameSite=None; Max-Age=${SESSION_DURATION_SECONDS}; Path=/`;
       return new Response(JSON.stringify({ name: result.name, expiresAt: result.expiresAt }), {
         status: 200,
-        headers: { "Content-Type": "application/json", "Set-Cookie": cookie, ...cors },
+        headers: { "Content-Type": "application/json", "Set-Cookie": cookie, ...corsHeaders(request) },
       });
     } catch {
-      return new Response(JSON.stringify({ error: "Invalid email or password." }), {
-        status: 401,
-        headers: { "Content-Type": "application/json", ...cors },
-      });
+      return json({ error: "Invalid email or password." }, 401, request);
     }
   }),
 });
-
-http.route({
-  path: "/auth/login",
-  method: "OPTIONS",
-  handler: httpAction(async (_ctx, request) => {
-    return new Response(null, { status: 204, headers: corsHeaders(request.headers.get("Origin")) });
-  }),
-});
+http.route({ path: "/auth/login", method: "OPTIONS", handler: preflight() });
 
 http.route({
   path: "/auth/session",
   method: "GET",
   handler: httpAction(async (ctx, request) => {
-    const cors = corsHeaders(request.headers.get("Origin"));
     const token = parseCookies(request.headers.get("Cookie"))[SESSION_COOKIE_NAME];
-
-    if (!token) {
-      return new Response(JSON.stringify({ valid: false }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...cors },
-      });
-    }
+    if (!token) return json({ valid: false }, 200, request);
 
     const result = await ctx.runQuery(internal.auth.validateSession, { token });
-    return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...cors },
-    });
+    return json(result, 200, request);
   }),
 });
-
-http.route({
-  path: "/auth/session",
-  method: "OPTIONS",
-  handler: httpAction(async (_ctx, request) => {
-    return new Response(null, { status: 204, headers: corsHeaders(request.headers.get("Origin")) });
-  }),
-});
+http.route({ path: "/auth/session", method: "OPTIONS", handler: preflight() });
 
 http.route({
   path: "/auth/logout",
   method: "POST",
   handler: httpAction(async (ctx, request) => {
-    const cors = corsHeaders(request.headers.get("Origin"));
     const token = parseCookies(request.headers.get("Cookie"))[SESSION_COOKIE_NAME];
-
-    if (token) {
-      await ctx.runMutation(internal.auth.logout, { token });
-    }
+    if (token) await ctx.runMutation(internal.auth.logout, { token });
 
     const clearCookie = `${SESSION_COOKIE_NAME}=; HttpOnly; Secure; SameSite=None; Max-Age=0; Path=/`;
     return new Response(JSON.stringify({ status: "logged_out" }), {
       status: 200,
-      headers: { "Content-Type": "application/json", "Set-Cookie": clearCookie, ...cors },
+      headers: { "Content-Type": "application/json", "Set-Cookie": clearCookie, ...corsHeaders(request) },
     });
   }),
 });
+http.route({ path: "/auth/logout", method: "OPTIONS", handler: preflight() });
+
+// ============================================================
+// PARTICIPANT ROUTES (Phase 4)
+// Every route uses authedRoute() — see httpHelpers.ts for what that
+// enforces (session check, then error handling).
+// ============================================================
 
 http.route({
-  path: "/auth/logout",
-  method: "OPTIONS",
-  handler: httpAction(async (_ctx, request) => {
-    return new Response(null, { status: 204, headers: corsHeaders(request.headers.get("Origin")) });
+  path: "/participants/list",
+  method: "GET",
+  handler: authedRoute(async (ctx, request) => {
+    const url = new URL(request.url);
+    const department = url.searchParams.get("department") || undefined;
+    const activeParam = url.searchParams.get("active");
+    const active = activeParam === null ? undefined : activeParam === "true";
+    const search = url.searchParams.get("search") || undefined;
+
+    const results = await ctx.runQuery(internal.participants.list, { department, active, search });
+    return json(results, 200, request);
   }),
 });
+http.route({ path: "/participants/list", method: "OPTIONS", handler: preflight() });
+
+http.route({
+  path: "/participants/one",
+  method: "GET",
+  handler: authedRoute(async (ctx, request) => {
+    const url = new URL(request.url);
+    const rawId = url.searchParams.get("id");
+    if (!rawId) throw new Error("Missing id.");
+
+    // Cast to the specific table's Id type (not `any`) — Convex's own
+    // v.id("participants") validator on the internal query still checks
+    // the value is really a valid participants ID at runtime; if it
+    // isn't, that throws and authedRoute() turns it into a clean 400.
+    const result = await ctx.runQuery(internal.participants.get, {
+      id: rawId as Id<"participants">,
+    });
+    if (!result) throw new Error("Participant not found.");
+    return json(result, 200, request);
+  }),
+});
+http.route({ path: "/participants/one", method: "OPTIONS", handler: preflight() });
+
+http.route({
+  path: "/participants/create",
+  method: "POST",
+  handler: authedRoute(async (ctx, request) => {
+    const { fullName, email, department } = await request.json();
+    const result = await ctx.runMutation(internal.participants.create, { fullName, email, department });
+    return json(result, 201, request);
+  }),
+});
+http.route({ path: "/participants/create", method: "OPTIONS", handler: preflight() });
+
+http.route({
+  path: "/participants/update",
+  method: "POST",
+  handler: authedRoute(async (ctx, request) => {
+    const { id, fullName, email, department } = await request.json();
+    if (!id) throw new Error("Missing id.");
+
+    const result = await ctx.runMutation(internal.participants.update, {
+      id: id as Id<"participants">,
+      fullName,
+      email,
+      department,
+    });
+    return json(result, 200, request);
+  }),
+});
+http.route({ path: "/participants/update", method: "OPTIONS", handler: preflight() });
+
+http.route({
+  path: "/participants/set-active",
+  method: "POST",
+  handler: authedRoute(async (ctx, request) => {
+    const { id, active } = await request.json();
+    if (!id) throw new Error("Missing id.");
+    if (typeof active !== "boolean") throw new Error("`active` must be true or false.");
+
+    const result = await ctx.runMutation(internal.participants.setActive, {
+      id: id as Id<"participants">,
+      active,
+    });
+    return json(result, 200, request);
+  }),
+});
+http.route({ path: "/participants/set-active", method: "OPTIONS", handler: preflight() });
 
 export default http;

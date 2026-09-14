@@ -1,0 +1,199 @@
+/**
+ * src/css/table.css
+ *
+ * Shared styling for data tables and the detail drawer — used
+ * wherever a page shows a list of records the admin can click into
+ * (Participants now; Templates/Campaigns/Reports in later phases).
+ *
+ * WHY THIS EXISTS:
+ * Keeps table/drawer visuals consistent across every page that uses
+ * src/js/ui/table.js and src/js/ui/drawer.js, without each page
+ * redefining its own table/drawer styles. Reuses tokens.css so colors
+ * and spacing stay identical to the rest of the app.
+ *
+ * CONNECTS TO:
+ * - src/css/tokens.css — design tokens (colors, spacing, radius)
+ * - src/js/ui/table.js, src/js/ui/drawer.js — the markup this styles
+ */
+
+@import "./tokens.css";
+
+/* ---- Data table ---- */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.data-table thead tr {
+  background: var(--color-sidebar-bg);
+}
+
+.data-table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  padding: 10px var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.data-table td {
+  font-size: 13.5px;
+  color: var(--color-text);
+  padding: 10px var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.data-table tbody tr {
+  cursor: pointer;
+}
+
+.data-table tbody tr:hover {
+  background: var(--color-accent-soft);
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table-empty {
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--color-text-faint);
+  font-size: 13.5px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+/* ---- Toolbar (search box + filters + primary action button) ---- */
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.table-toolbar input[type="text"],
+.table-toolbar select {
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--color-text);
+  outline: none;
+}
+
+.table-toolbar input[type="text"]:focus,
+.table-toolbar select:focus {
+  border-color: var(--color-accent);
+}
+
+.table-toolbar .spacer {
+  flex: 1;
+}
+
+/* ---- Status pill (e.g. Active / Inactive) ---- */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-pill--active {
+  color: var(--color-status-success);
+  background: #e7f1ee;
+}
+
+.status-pill--inactive {
+  color: var(--color-text-faint);
+  background: #eef0f2;
+}
+
+/* ---- Drawer ---- */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(17, 17, 17, 0.35);
+}
+
+.drawer-panel {
+  position: relative;
+  width: 380px;
+  max-width: 90vw;
+  height: 100%;
+  background: var(--color-surface);
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.08);
+  padding: var(--space-6);
+  overflow-y: auto;
+}
+
+.drawer-close {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  background: none;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--color-text-faint);
+  cursor: pointer;
+}
+
+.drawer-content h2 {
+  font-size: 17px;
+  margin-bottom: var(--space-4);
+}
+
+.drawer-field {
+  margin-bottom: var(--space-4);
+}
+
+.drawer-field label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.drawer-field input,
+.drawer-field select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--color-text);
+  outline: none;
+}
+
+.drawer-field input:focus,
+.drawer-field select:focus {
+  border-color: var(--color-accent);
+}
+
+.drawer-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
