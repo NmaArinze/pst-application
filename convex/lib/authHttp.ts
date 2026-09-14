@@ -20,6 +20,7 @@
 
 import { internal } from "../_generated/api";
 import type { ActionCtx } from "../_generated/server";
+import type { Id } from "../_generated/dataModel";
 
 const SESSION_COOKIE_NAME = "pst_session";
 
@@ -42,14 +43,14 @@ function parseCookies(header: string | null): Record<string, string> {
 export async function requireAdmin(
   ctx: ActionCtx,
   request: Request
-): Promise<{ name: string; email: string } | null> {
+): Promise<{ name: string; email: string; administratorId: Id<"administrators">} | null> {
   const token = parseCookies(request.headers.get("Cookie"))[SESSION_COOKIE_NAME];
   if (!token) return null;
 
   const result = await ctx.runQuery(internal.auth.validateSession, { token });
   if (!result.valid) return null;
 
-  return { name: result.name!, email: result.email! };
+  return { name: result.name!, email: result.email!, administratorId: result.administratorId! };
 }
 
 /**

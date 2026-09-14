@@ -140,7 +140,7 @@ export const validateSession = internalQuery({
       return { valid: false };
     }
 
-    return { valid: true, name: admin.name, email: admin.email };
+    return { valid: true, name: admin.name, email: admin.email, administratorId: admin._id };
   },
 });
 

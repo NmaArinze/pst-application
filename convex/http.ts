@@ -14,6 +14,7 @@
  * CONNECTS TO:
  * - convex/auth.ts — login/session/logout (Phase 2)
  * - convex/participants.ts — participant CRUD (Phase 4)
+ * - convex/templates.ts — template CRUD (Phase 5)
  * - convex/lib/authHttp.ts, convex/lib/httpHelpers.ts — shared helpers
  * - src/js/lib/api.js (frontend) — calls these routes
  *
@@ -28,6 +29,7 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { corsHeaders } from "./lib/authHttp";
 import { json, preflight, authedRoute } from "./lib/httpHelpers";
+import { ConvexError } from "convex/values";
 
 const SESSION_COOKIE_NAME = "pst_session";
 const SESSION_DURATION_SECONDS = 30 * 60; // matches auth.ts's SESSION_DURATION_MS
@@ -126,7 +128,7 @@ http.route({
   handler: authedRoute(async (ctx, request) => {
     const url = new URL(request.url);
     const rawId = url.searchParams.get("id");
-    if (!rawId) throw new Error("Missing id.");
+    if (!rawId) throw new ConvexError("Missing id.");
 
     // Cast to the specific table's Id type (not `any`) — Convex's own
     // v.id("participants") validator on the internal query still checks
@@ -135,7 +137,7 @@ http.route({
     const result = await ctx.runQuery(internal.participants.get, {
       id: rawId as Id<"participants">,
     });
-    if (!result) throw new Error("Participant not found.");
+    if (!result) throw new ConvexError("Participant not found.");
     return json(result, 200, request);
   }),
 });
@@ -157,7 +159,7 @@ http.route({
   method: "POST",
   handler: authedRoute(async (ctx, request) => {
     const { id, fullName, email, department } = await request.json();
-    if (!id) throw new Error("Missing id.");
+    if (!id) throw new ConvexError("Missing id.");
 
     const result = await ctx.runMutation(internal.participants.update, {
       id: id as Id<"participants">,
@@ -175,8 +177,8 @@ http.route({
   method: "POST",
   handler: authedRoute(async (ctx, request) => {
     const { id, active } = await request.json();
-    if (!id) throw new Error("Missing id.");
-    if (typeof active !== "boolean") throw new Error("`active` must be true or false.");
+    if (!id) throw new ConvexError("Missing id.");
+    if (typeof active !== "boolean") throw new ConvexError("`active` must be true or false.");
 
     const result = await ctx.runMutation(internal.participants.setActive, {
       id: id as Id<"participants">,
@@ -186,5 +188,98 @@ http.route({
   }),
 });
 http.route({ path: "/participants/set-active", method: "OPTIONS", handler: preflight() });
+
+// ============================================================
+// TEMPLATE ROUTES (Phase 5)
+// Every route uses authedRoute() — session checked first, business
+// logic (convex/templates.ts) only runs after that succeeds.
+// ============================================================
+
+http.route({
+  path: "/templates/list",
+  method: "GET",
+  handler: authedRoute(async (ctx, request) => {
+    const url = new URL(request.url);
+    const activeParam = url.searchParams.get("active");
+    const active = activeParam === null ? undefined : activeParam === "true";
+
+    const results = await ctx.runQuery(internal.templates.list, { active });
+    return json(results, 200, request);
+  }),
+});
+http.route({ path: "/templates/list", method: "OPTIONS", handler: preflight() });
+
+http.route({
+  path: "/templates/one",
+  method: "GET",
+  handler: authedRoute(async (ctx, request) => {
+    const url = new URL(request.url);
+    const rawId = url.searchParams.get("id");
+    if (!rawId) throw new ConvexError("Missing id.");
+
+    const result = await ctx.runQuery(internal.templates.get, {
+      id: rawId as Id<"templates">,
+    });
+    if (!result) throw new Error("Template not found.");
+    return json(result, 200, request);
+  }),
+});
+http.route({ path: "/templates/one", method: "OPTIONS", handler: preflight() });
+
+http.route({
+  path: "/templates/create",
+  method: "POST",
+  handler: authedRoute(async (ctx, request, admin) => {
+    const { name, description, emailSubject, senderName, resendTemplateId } = await request.json();
+    const result = await ctx.runMutation(internal.templates.create, {
+      name,
+      description,
+      emailSubject,
+      senderName,
+      resendTemplateId,
+      createdByAdministratorId: admin.administratorId,
+    });
+    return json(result, 201, request);
+  }),
+});
+http.route({ path: "/templates/create", method: "OPTIONS", handler: preflight() });
+
+http.route({
+  path: "/templates/update",
+  method: "POST",
+  handler: authedRoute(async (ctx, request) => {
+    const { id, name, description, emailSubject, senderName, resendTemplateId } = await request.json();
+    if (!id) throw new Error("Missing id.");
+
+    const result = await ctx.runMutation(internal.templates.update, {
+      id: id as Id<"templates">,
+      name,
+      description,
+      emailSubject,
+      senderName,
+      resendTemplateId,
+    });
+    return json(result, 200, request);
+  }),
+});
+http.route({ path: "/templates/update", method: "OPTIONS", handler: preflight() });
+
+http.route({
+  path: "/templates/set-active",
+  method: "POST",
+  handler: authedRoute(async (ctx, request) => {
+    const { id, active } = await request.json();
+    if (!id) throw new Error("Missing id.");
+    if (typeof active !== "boolean") throw new Error("`active` must be true or false.");
+
+    const result = await ctx.runMutation(internal.templates.setActive, {
+      id: id as Id<"templates">,
+      active,
+    });
+    return json(result, 200, request);
+  }),
+});
+http.route({ path: "/templates/set-active", method: "OPTIONS", handler: preflight() });
+
 
 export default http;

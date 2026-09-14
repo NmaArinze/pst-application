@@ -197,3 +197,47 @@
   gap: var(--space-3);
   margin-top: var(--space-6);
 }
+
+/* ---- Confirmation modal ---- */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirm-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(17, 17, 17, 0.35);
+}
+
+.confirm-panel {
+  position: relative;
+  width: 340px;
+  max-width: 90vw;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+}
+
+.confirm-panel h3 {
+  font-size: 15px;
+  margin-bottom: var(--space-2);
+}
+
+.confirm-panel p {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-5) 0;
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}

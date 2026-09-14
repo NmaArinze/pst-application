@@ -24,6 +24,7 @@ import { httpAction } from "../_generated/server";
 import type { ActionCtx } from "../_generated/server";
 import { requireAdmin, corsHeaders } from "./authHttp";
 import { ConvexError } from "convex/values";
+import type { Id } from "../_generated/dataModel";
 
 /** Standard JSON response, with CORS headers applied automatically. */
 export function json(data: unknown, status: number, request: Request): Response {
@@ -43,7 +44,7 @@ export function preflight() {
 type AuthedHandler = (
   ctx: ActionCtx,
   request: Request,
-  admin: { name: string; email: string }
+  admin: { name: string; email: string; administratorId: Id<"administrators">}
 ) => Promise<Response>;
 
 /**

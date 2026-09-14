@@ -14,6 +14,7 @@ export default defineConfig({
         main: resolve(__dirname, "index.html"),
         login: resolve(__dirname, "login.html"),
         participants: resolve(__dirname, "participants.html"),
+        templates: resolve(__dirname, "templates.html"),
       },
     },
   },

@@ -30,6 +30,7 @@ import { renderTable } from "./ui/table.js";
 import { openDrawer, closeDrawer } from "./ui/drawer.js";
 import { requireSession, logout } from "./lib/session.js";
 import { apiGet, apiPost } from "./lib/api.js";
+import { confirmDialog } from "./ui/confirmDialog.js";
 
 let currentFilters = { search: "", department: "", active: "" };
 
@@ -243,6 +244,16 @@ async function handleSaveParticipant(event, existingId) {
 }
 
 async function handleToggleActive(id, newActive) {
+  const action = newActive ? "activate" : "deactivate";
+  const confirmed = await confirmDialog({
+    title: newActive ? "Activate participant" : "Deactivate participant",
+    message: newActive 
+    ? `Are you sure you want to activate this participant?`
+    : 'This particpants will no longer receive phishing campaigns. This action can be reversed later.',
+    confirmLabel: newActive ? "Activate" : "Deactivate",
+  });
+  if (!confirmed) return;
+
   try {
     await apiPost("/participants/set-active", { id, active: newActive });
     closeDrawer();
