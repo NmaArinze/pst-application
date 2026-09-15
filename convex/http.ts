@@ -147,8 +147,8 @@ http.route({
   path: "/participants/create",
   method: "POST",
   handler: authedRoute(async (ctx, request) => {
-    const { fullName, email, department } = await request.json();
-    const result = await ctx.runMutation(internal.participants.create, { fullName, email, department });
+    const { firstName, surname,email, department } = await request.json();
+    const result = await ctx.runMutation(internal.participants.create, { firstName, surname, email, department });
     return json(result, 201, request);
   }),
 });
@@ -158,12 +158,13 @@ http.route({
   path: "/participants/update",
   method: "POST",
   handler: authedRoute(async (ctx, request) => {
-    const { id, fullName, email, department } = await request.json();
+    const { id, firstName, surname, email, department } = await request.json();
     if (!id) throw new ConvexError("Missing id.");
 
     const result = await ctx.runMutation(internal.participants.update, {
       id: id as Id<"participants">,
-      fullName,
+      firstName,
+      surname,
       email,
       department,
     });

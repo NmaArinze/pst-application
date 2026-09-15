@@ -23,7 +23,8 @@ export default defineSchema({
 
   participants: defineTable({
     participantCode: v.string(), // system-generated stable ID, unique
-    fullName: v.string(),
+    firstName: v.string(),
+    surname: v.string(),
     email: v.string(),
     department: v.string(),
     active: v.boolean(),

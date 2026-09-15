@@ -125,7 +125,7 @@ async function loadParticipants() {
     renderTable(
       container,
       [
-        { key: "fullName", label: "Name" },
+        { key: "firstName", label: "Name", render: (row) => `${row.firstName} ${row.surname}` },
         { key: "email", label: "Email" },
         { key: "department", label: "Department" },
         {
@@ -168,8 +168,12 @@ function openParticipantDrawer(participant) {
     <div id="drawer-error" class="auth-error"></div>
     <form id="participant-form">
       <div class="drawer-field">
-        <label for="fullName">Full name</label>
-        <input type="text" id="fullName" required value="${isEdit ? participant.fullName : ""}" />
+        <label for="firstName">First name</label>
+        <input type="text" id="firstName" required value="${isEdit ? participant.firstName : ""}" />
+      </div>
+      <div class="drawer-field">
+        <label for="surname">Surname</label>
+        <input type="text" id="surname" required value="${isEdit ? participant.surname : ""}" />
       </div>
       <div class="drawer-field">
         <label for="email">Email</label>
@@ -210,8 +214,9 @@ function showDrawerError(message) {
  * convex/participants.ts still re-validates independently; this is
  * just fast feedback, not the source of truth.
  */
-function validateParticipantForm(fullName, email, department) {
-  if (!fullName.trim()) return "Full name is required.";
+function validateParticipantForm(firstName, surname, email, department) {
+  if (!firstName.trim()) return "First name is required.";
+  if (!surname.trim()) return "Surname is required.";
   if (!email.trim() || !email.includes("@")) return "A valid email is required.";
   if (!department.trim()) return "Department is required.";
   return null;
@@ -220,11 +225,12 @@ function validateParticipantForm(fullName, email, department) {
 async function handleSaveParticipant(event, existingId) {
   event.preventDefault();
 
-  const fullName = document.getElementById("fullName").value;
+  const firstName = document.getElementById("firstName").value;
+  const surname = document.getElementById("surname").value;
   const email = document.getElementById("email").value;
   const department = document.getElementById("department").value;
 
-  const validationError = validateParticipantForm(fullName, email, department);
+  const validationError = validateParticipantForm(firstName, surname, email, department);
   if (validationError) {
     showDrawerError(validationError);
     return;
@@ -232,9 +238,9 @@ async function handleSaveParticipant(event, existingId) {
 
   try {
     if (existingId) {
-      await apiPost("/participants/update", { id: existingId, fullName, email, department });
+      await apiPost("/participants/update", { id: existingId, firstName, surname, email, department });
     } else {
-      await apiPost("/participants/create", { fullName, email, department });
+      await apiPost("/participants/create", { firstName, surname, email, department });
     }
     closeDrawer();
     await loadParticipants();

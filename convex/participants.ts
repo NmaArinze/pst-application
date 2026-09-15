@@ -5,39 +5,24 @@
  *
  * WHY THIS EXISTS:
  * Holds the actual database logic for Phase 4 — list, create, edit,
- * activate/deactivate participants. These are `internal*` functions,
- * meaning Convex blocks the browser from calling them directly over the
- * WebSocket client. The only way to reach them is through the
- * authenticated HTTP Action routes in convex/http.ts, which validate
- * the session first (see convex/lib/authHttp.ts).
- *
- * Business-rule errors (e.g. duplicate email) are thrown as
- * ConvexError, not plain Error — ConvexError sends a clean message to
- * the caller as intentional data; a plain Error gets wrapped by Convex
- * as "Uncaught Error: ..." with internal file/line info, which is
- * meant for server logs, not for display to an admin in the UI.
+ * activate/deactivate participants. Stored as separate firstName/surname
+ * (not a single fullName) per spec Section 5 — Resend's email personalization
+ * (Phase 9) needs firstName in isolation to address participants correctly
+ * ("Hi {FIRST_NAME}"), which a combined string can't reliably provide.
+ * Reached only through session-checked HTTP Actions in http.ts.
  *
  * CONNECTS TO:
- * - convex/schema.ts — the `participants` table defined in Phase 3.
- * - convex/http.ts — wraps each function below in a session-checked
- *   HTTP route (added in this same phase). authedRoute() in
- *   convex/lib/httpHelpers.ts reads ConvexError.data as the clean
- *   { error: "..." } response it sends to the frontend.
- * - src/js/participants.js — the frontend page that calls those routes.
- *
- * No participant data is ever hardcoded here — every value comes from
- * the HTTP request body, ultimately typed in by an administrator.
+ * - convex/schema.ts — the `participants` table (Phase 3/updated Phase 5).
+ * - convex/http.ts — wraps each function in an authedRoute() route.
+ * - src/js/participants.js — the frontend page.
+ * - Phase 9 (Resend Integration) will read firstName as FIRST_NAME.
  */
 
 import { internalMutation, internalQuery } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
 
-/**
- * Generates a short, human-readable, unique participant code
- * (e.g. "PST-4K9Q2A"). Retries on the rare collision.
- */
 async function generateParticipantCode(ctx: { db: any }): Promise<string> {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I to avoid confusion
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   for (let attempt = 0; attempt < 5; attempt++) {
     let code = "PST-";
     for (let i = 0; i < 6; i++) {
@@ -60,25 +45,31 @@ export const list = internalQuery({
     search: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    let results = await ctx.db.query("participants").collect();
+    let results =
+      args.active !== undefined
+        ? await ctx.db
+            .query("participants")
+            .withIndex("by_active", (q) => q.eq("active", args.active!))
+            .collect()
+        : await ctx.db.query("participants").collect();
 
     if (args.department) {
       results = results.filter((p) => p.department === args.department);
-    }
-    if (args.active !== undefined) {
-      results = results.filter((p) => p.active === args.active);
     }
     if (args.search) {
       const term = args.search.toLowerCase();
       results = results.filter(
         (p) =>
-          p.fullName.toLowerCase().includes(term) ||
+          p.firstName.toLowerCase().includes(term) ||
+          p.surname.toLowerCase().includes(term) ||
           p.email.toLowerCase().includes(term) ||
           p.department.toLowerCase().includes(term)
       );
     }
 
-    return results.sort((a, b) => a.fullName.localeCompare(b.fullName));
+    return results.sort((a, b) =>
+      `${a.firstName} ${a.surname}`.localeCompare(`${b.firstName} ${b.surname}`)
+    );
   },
 });
 
@@ -93,17 +84,19 @@ export const get = internalQuery({
 /** Create a new participant. Rejects a duplicate email before inserting. */
 export const create = internalMutation({
   args: {
-    fullName: v.string(),
+    firstName: v.string(),
+    surname: v.string(),
     email: v.string(),
     department: v.string(),
   },
   handler: async (ctx, args) => {
     const email = args.email.trim().toLowerCase();
-    const fullName = args.fullName.trim();
+    const firstName = args.firstName.trim();
+    const surname = args.surname.trim();
     const department = args.department.trim();
 
-    if (!fullName || !email || !department) {
-      throw new ConvexError("Full name, email, and department are all required.");
+    if (!firstName || !surname || !email || !department) {
+      throw new ConvexError("First name, surname, email, and department are all required.");
     }
 
     const existing = await ctx.db
@@ -119,7 +112,8 @@ export const create = internalMutation({
 
     const id = await ctx.db.insert("participants", {
       participantCode,
-      fullName,
+      firstName,
+      surname,
       email,
       department,
       active: true,
@@ -135,17 +129,24 @@ export const create = internalMutation({
 export const update = internalMutation({
   args: {
     id: v.id("participants"),
-    fullName: v.string(),
+    firstName: v.string(),
+    surname: v.string(),
     email: v.string(),
     department: v.string(),
   },
   handler: async (ctx, args) => {
+    const existingParticipant = await ctx.db.get(args.id);
+    if (!existingParticipant) {
+      throw new ConvexError("Participant not found.");
+    }
+
     const email = args.email.trim().toLowerCase();
-    const fullName = args.fullName.trim();
+    const firstName = args.firstName.trim();
+    const surname = args.surname.trim();
     const department = args.department.trim();
 
-    if (!fullName || !email || !department) {
-      throw new ConvexError("Full name, email, and department are all required.");
+    if (!firstName || !surname || !email || !department) {
+      throw new ConvexError("First name, surname, email, and department are all required.");
     }
 
     const existingWithEmail = await ctx.db
@@ -157,7 +158,8 @@ export const update = internalMutation({
     }
 
     await ctx.db.patch(args.id, {
-      fullName,
+      firstName,
+      surname,
       email,
       department,
       updatedAt: Date.now(),
@@ -171,6 +173,11 @@ export const update = internalMutation({
 export const setActive = internalMutation({
   args: { id: v.id("participants"), active: v.boolean() },
   handler: async (ctx, args) => {
+    const existingParticipant = await ctx.db.get(args.id);
+    if (!existingParticipant) {
+      throw new ConvexError("Participant not found.");
+    }
+
     await ctx.db.patch(args.id, { active: args.active, updatedAt: Date.now() });
     return { status: "updated" };
   },
