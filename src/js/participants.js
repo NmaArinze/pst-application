@@ -165,7 +165,7 @@ function openParticipantDrawer(participant) {
 
   const html = `
     <h2>${isEdit ? "Edit participant" : "Add participant"}</h2>
-    <div id="drawer-error" class="auth-error"></div>
+    <div id="drawer-error" class="inline-error"></div>
     <form id="participant-form">
       <div class="drawer-field">
         <label for="firstName">First name</label>
@@ -206,7 +206,7 @@ function showDrawerError(message) {
   const el = document.getElementById("drawer-error");
   if (!el) return;
   el.textContent = message;
-  el.classList.add("auth-error--visible");
+  el.classList.add("inline-error--visible");
 }
 
 /**

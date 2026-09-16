@@ -15,6 +15,8 @@ export default defineConfig({
         login: resolve(__dirname, "login.html"),
         participants: resolve(__dirname, "participants.html"),
         templates: resolve(__dirname, "templates.html"),
+        campaigns: resolve(__dirname, "campaigns.html"),
+        campaignDetail: resolve(__dirname, "campaign-detail.html"),
       },
     },
   },

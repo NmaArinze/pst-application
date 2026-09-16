@@ -121,7 +121,7 @@ function openTemplateDrawer(template) {
 
   const html = `
     <h2>${isEdit ? "Edit template" : "Add template"}</h2>
-    <div id="drawer-error" class="auth-error"></div>
+    <div id="drawer-error" class="inline-error"></div>
     <form id="template-form">
       <div class="drawer-field">
         <label for="name">Name</label>
@@ -166,7 +166,7 @@ function showDrawerError(message) {
   const el = document.getElementById("drawer-error");
   if (!el) return;
   el.textContent = message;
-  el.classList.add("auth-error--visible");
+  el.classList.add("inline-error--visible");
 }
 
 /** Client-side validation before calling the API — server remains the source of truth. */

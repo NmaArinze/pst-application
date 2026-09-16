@@ -15,6 +15,7 @@
  * - convex/auth.ts — login/session/logout (Phase 2)
  * - convex/participants.ts — participant CRUD (Phase 4)
  * - convex/templates.ts — template CRUD (Phase 5)
+ * - convex/campaigns.ts — campaign lifecycle management (Phase 6)
  * - convex/lib/authHttp.ts, convex/lib/httpHelpers.ts — shared helpers
  * - src/js/lib/api.js (frontend) — calls these routes
  *
@@ -282,5 +283,90 @@ http.route({
 });
 http.route({ path: "/templates/set-active", method: "OPTIONS", handler: preflight() });
 
+// ============================================================
+// CAMPAIGN ROUTES (Phase 6)
+// Status changes only ever go through transitionStatus — never a
+// direct patch — so illegal transitions are rejected server-side.
+// ============================================================
+
+http.route({
+  path: "/campaigns/list",
+  method: "GET",
+  handler: authedRoute(async (ctx, request) => {
+    const url = new URL(request.url);
+    const status = url.searchParams.get("status") || undefined;
+    const results = await ctx.runQuery(internal.campaigns.list, { status });
+    return json(results, 200, request);
+  }),
+});
+http.route({ path: "/campaigns/list", method: "OPTIONS", handler: preflight() });
+
+http.route({
+  path: "/campaigns/one",
+  method: "GET",
+  handler: authedRoute(async (ctx, request) => {
+    const url = new URL(request.url);
+    const rawId = url.searchParams.get("id");
+    if (!rawId) throw new ConvexError("Missing id.");
+
+    const result = await ctx.runQuery(internal.campaigns.get, { id: rawId as Id<"campaigns"> });
+    if (!result) throw new ConvexError("Campaign not found.");
+    return json(result, 200, request);
+  }),
+});
+http.route({ path: "/campaigns/one", method: "OPTIONS", handler: preflight() });
+
+http.route({
+  path: "/campaigns/create",
+  method: "POST",
+  handler: authedRoute(async (ctx, request, admin) => {
+    const { name, templateId, sendingMode, scheduledAt } = await request.json();
+    const result = await ctx.runMutation(internal.campaigns.create, {
+      name,
+      templateId: templateId as Id<"templates">,
+      sendingMode,
+      scheduledAt,
+      createdByAdministratorId: admin.administratorId,
+    });
+    return json(result, 201, request);
+  }),
+});
+http.route({ path: "/campaigns/create", method: "OPTIONS", handler: preflight() });
+
+http.route({
+  path: "/campaigns/update",
+  method: "POST",
+  handler: authedRoute(async (ctx, request) => {
+    const { id, name, templateId, sendingMode, scheduledAt } = await request.json();
+    if (!id) throw new ConvexError("Missing id.");
+
+    const result = await ctx.runMutation(internal.campaigns.update, {
+      id: id as Id<"campaigns">,
+      name,
+      templateId: templateId as Id<"templates">,
+      sendingMode,
+      scheduledAt,
+    });
+    return json(result, 200, request);
+  }),
+});
+http.route({ path: "/campaigns/update", method: "OPTIONS", handler: preflight() });
+
+http.route({
+  path: "/campaigns/transition-status",
+  method: "POST",
+  handler: authedRoute(async (ctx, request) => {
+    const { id, toStatus } = await request.json();
+    if (!id) throw new ConvexError("Missing id.");
+    if (!toStatus) throw new ConvexError("Missing toStatus.");
+
+    const result = await ctx.runMutation(internal.campaigns.transitionStatus, {
+      id: id as Id<"campaigns">,
+      toStatus,
+    });
+    return json(result, 200, request);
+  }),
+});
+http.route({ path: "/campaigns/transition-status", method: "OPTIONS", handler: preflight() });
 
 export default http;

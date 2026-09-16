@@ -8,7 +8,7 @@
 export function renderSidebar(activePage) {
   const items = [
     { key: "overview", label: "Overview", page: "index.html", available: true },
-    { key: "campaigns", label: "Campaigns", page: "campaigns.html", available: false },
+    { key: "campaigns", label: "Campaigns", page: "campaigns.html", available: true },
     { key: "participants", label: "Participants", page: "participants.html", available: true },
     { key: "templates", label: "Templates", page: "templates.html", available: true },
     { key: "reports", label: "Reports", page: "reports.html", available: false },
