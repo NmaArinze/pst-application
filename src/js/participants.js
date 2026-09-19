@@ -31,7 +31,6 @@ import { openDrawer, closeDrawer } from "./ui/drawer.js";
 import { requireSession, logout } from "./lib/session.js";
 import { apiGet, apiPost } from "./lib/api.js";
 import { confirmDialog } from "./ui/confirmDialog.js";
-import { apiGet, apiPost } from "./lib/api.js";
 import { escapeHtml } from "./ui/table.js";
 
 let currentFilters = { search: "", department: "", active: "" };
