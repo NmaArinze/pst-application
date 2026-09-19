@@ -27,6 +27,7 @@ import { renderTable } from "./ui/table.js";
 import { openDrawer, closeDrawer } from "./ui/drawer.js";
 import { requireSession, logout } from "./lib/session.js";
 import { apiGet, apiPost } from "./lib/api.js";
+import { escapeHtml } from "./ui/table.js";
 import { confirmDialog } from "./ui/confirmDialog.js";
 
 let currentFilters = { active: "" };
@@ -52,7 +53,7 @@ function renderShell(session) {
             <p>Reusable simulated-phishing email definitions.</p>
           </div>
           <div style="text-align:right;">
-            <div style="font-size:13px;font-weight:500;color:var(--color-text);">${session.name}</div>
+            <div style="font-size:13px;font-weight:500;color:var(--color-text);">${escapeHtml(session.name)}</div>
             <button id="logout-btn" class="btn btn--secondary" style="margin-top:6px;padding:5px 12px;font-size:12px;">
               Log out
             </button>
@@ -125,23 +126,23 @@ function openTemplateDrawer(template) {
     <form id="template-form">
       <div class="drawer-field">
         <label for="name">Name</label>
-        <input type="text" id="name" required value="${isEdit ? template.name : ""}" />
+        <input type="text" id="name" required value="${isEdit ? escapeHtml(template.name) : ""}" />
       </div>
       <div class="drawer-field">
         <label for="description">Description</label>
-        <input type="text" id="description" value="${isEdit ? (template.description || "") : ""}" />
+        <input type="text" id="description" value="${isEdit ? escapeHtml(template.description || "") : ""}" />
       </div>
       <div class="drawer-field">
         <label for="emailSubject">Email subject</label>
-        <input type="text" id="emailSubject" required value="${isEdit ? template.emailSubject : ""}" />
+        <input type="text" id="emailSubject" required value="${isEdit ? escapeHtml(template.emailSubject) : ""}" />
       </div>
       <div class="drawer-field">
         <label for="senderName">Sender name</label>
-        <input type="text" id="senderName" required value="${isEdit ? template.senderName : ""}" />
+        <input type="text" id="senderName" required value="${isEdit ? escapeHtml(template.senderName) : ""}" />
       </div>
       <div class="drawer-field">
         <label for="resendTemplateId">Resend Template ID</label>
-        <input type="text" id="resendTemplateId" required value="${isEdit ? template.resendTemplateId : ""}" />
+        <input type="text" id="resendTemplateId" required value="${isEdit ? escapeHtml(template.resendTemplateId) : ""}" />
       </div>
       <div class="drawer-actions">
         <button type="submit" class="btn btn--primary">${isEdit ? "Save changes" : "Add template"}</button>

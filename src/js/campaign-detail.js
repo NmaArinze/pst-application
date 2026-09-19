@@ -12,6 +12,7 @@ import { renderSidebar, bindSidebarNav } from "./ui/sidebar.js";
 import { confirmDialog } from "./ui/confirmDialog.js";
 import { requireSession, logout } from "./lib/session.js";
 import { apiGet, apiPost } from "./lib/api.js";
+import { escapeHtml } from "./ui/table.js";
 import { openDrawer , closeDrawer } from "./ui/drawer.js";
 
 const STATUS_LABELS = {
@@ -74,7 +75,7 @@ function renderShell(session) {
             <h1 id="campaign-title" style="margin-top:4px;">Loading…</h1>
           </div>
           <div style="text-align:right;">
-            <div style="font-size:13px;font-weight:500;color:var(--color-text);">${session.name}</div>
+            <div style="font-size:13px;font-weight:500;color:var(--color-text);">${escapeHtml(session.name)}</div>
             <button id="logout-btn" class="btn btn--secondary" style="margin-top:6px;padding:5px 12px;font-size:12px;">
               Log out
             </button>
@@ -102,13 +103,13 @@ async function loadCampaign(campaignId) {
 }
 
 function renderCampaign(campaign) {
-  document.getElementById("campaign-title").textContent = campaign.name;
+  document.getElementById("campaign-title").textContent = escapeHtml(campaign.name);
 
   const actions = AVAILABLE_ACTIONS[campaign.status] || [];
   const actionsHtml = actions
     .map(
       (a) =>
-        `<button class="btn ${a.style}" data-to-status="${a.toStatus}" style="margin-right:8px;">${a.label}</button>`
+        `<button class="btn ${a.style}" data-to-status="${a.toStatus}" style="margin-right:8px;">${escapeHtml(a.label)}</button>`
     )
     .join("");
 
@@ -125,7 +126,7 @@ function renderCampaign(campaign) {
         </span>
       </div>
       <div id="transition-error" class="inline-error"></div>
-      <div class="drawer-field"><label>Template</label><div>${campaign.templateName}</div></div>
+      <div class="drawer-field"><label>Template</label><div>${escapeHtml(campaign.templateName)}</div></div>
       <div class="drawer-field"><label>Sending mode</label><div>${campaign.sendingMode === "SCHEDULED" ? "Scheduled" : "Manual"}</div></div>
       ${scheduledLine}
       <div style="margin-top:20px;">${actionsHtml || `<span style="font-size:13px;color:var(--color-text-faint);">No further actions available.</span>`}</div>
@@ -207,9 +208,9 @@ async function loadAssignments(campaignId) {
       .map(
         (a) => `
         <tr>
-          <td>${a.participantName}</td>
-          <td>${a.participantEmail}</td>
-          <td>${a.participantDepartment}</td>
+          <td>${escapeHtml(a.participantName)}</td>
+          <td>${escapeHtml(a.participantEmail)}</td>
+          <td>${escapeHtml(a.participantDepartment)}</td>
           <td><span class="status-pill status-pill--inactive">${a.emailStatus}</span></td>
         </tr>`
       )
@@ -248,7 +249,7 @@ async function openAssignParticipantsDrawer(campaignId) {
       (p) => `
       <label style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--color-border);font-size:13px;">
         <input type="checkbox" class="assignee-checkbox" value="${p._id}" />
-        <span>${p.firstName} ${p.surname} — <span style="color:var(--color-text-faint);">${p.email}</span></span>
+        <span>${escapeHtml(p.firstName)} ${escapeHtml(p.surname)} — <span style="color:var(--color-text-faint);">${escapeHtml(p.email)}</span></span>
       </label>`
     )
     .join("");

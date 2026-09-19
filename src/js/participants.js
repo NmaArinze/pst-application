@@ -31,6 +31,8 @@ import { openDrawer, closeDrawer } from "./ui/drawer.js";
 import { requireSession, logout } from "./lib/session.js";
 import { apiGet, apiPost } from "./lib/api.js";
 import { confirmDialog } from "./ui/confirmDialog.js";
+import { apiGet, apiPost } from "./lib/api.js";
+import { escapeHtml } from "./ui/table.js";
 
 let currentFilters = { search: "", department: "", active: "" };
 
@@ -55,7 +57,7 @@ function renderShell(session) {
             <p>Manage the staff enrolled in phishing-awareness campaigns.</p>
           </div>
           <div style="text-align:right;">
-            <div style="font-size:13px;font-weight:500;color:var(--color-text);">${session.name}</div>
+            <div style="font-size:13px;font-weight:500;color:var(--color-text);">${escapeHtml(ession.name)}</div>
             <button id="logout-btn" class="btn btn--secondary" style="margin-top:6px;padding:5px 12px;font-size:12px;">
               Log out
             </button>
@@ -125,7 +127,7 @@ async function loadParticipants() {
     renderTable(
       container,
       [
-        { key: "firstName", label: "Name", render: (row) => `${row.firstName} ${row.surname}` },
+        { key: "firstName", label: "Name", render: (row) => `${escapeHtml(row.firstName)} ${escapeHtml(row.surname)}` },
         { key: "email", label: "Email" },
         { key: "department", label: "Department" },
         {
@@ -155,7 +157,7 @@ function populateDepartmentFilter(participants) {
 
   select.innerHTML =
     `<option value="">All departments</option>` +
-    departments.map((d) => `<option value="${d}">${d}</option>`).join("");
+    departments.map((d) => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join("");
 
   select.value = currentValue;
 }
@@ -169,19 +171,19 @@ function openParticipantDrawer(participant) {
     <form id="participant-form">
       <div class="drawer-field">
         <label for="firstName">First name</label>
-        <input type="text" id="firstName" required value="${isEdit ? participant.firstName : ""}" />
+        <input type="text" id="firstName" required value="${isEdit ? escapeHtml(participant.firstName) : ""}" />
       </div>
       <div class="drawer-field">
         <label for="surname">Surname</label>
-        <input type="text" id="surname" required value="${isEdit ? participant.surname : ""}" />
+        <input type="text" id="surname" required value="${isEdit ? escapeHtml(participant.surname) : ""}" />
       </div>
       <div class="drawer-field">
         <label for="email">Email</label>
-        <input type="email" id="email" required value="${isEdit ? participant.email : ""}" />
+        <input type="email" id="email" required value="${isEdit ? escapeHtml(participant.email)    : ""}" />
       </div>
       <div class="drawer-field">
         <label for="department">Department</label>
-        <input type="text" id="department" required value="${isEdit ? participant.department : ""}" />
+        <input type="text" id="department" required value="${isEdit ? escapeHtml(participant.department) : ""}" />
       </div>
       <div class="drawer-actions">
         <button type="submit" class="btn btn--primary">${isEdit ? "Save changes" : "Add participant"}</button>

@@ -12,6 +12,7 @@ import { renderSidebar, bindSidebarNav } from "./ui/sidebar.js";
 import { openDrawer, closeDrawer } from "./ui/drawer.js";
 import { requireSession, logout } from "./lib/session.js";
 import { apiGet, apiPost } from "./lib/api.js";
+import { escapeHtml } from "./ui/table.js";
 
 const STATUS_LABELS = {
   DRAFT: "Draft",
@@ -42,7 +43,7 @@ function renderShell(session) {
             <p>Phishing-awareness exercises — create, review, and launch.</p>
           </div>
           <div style="text-align:right;">
-            <div style="font-size:13px;font-weight:500;color:var(--color-text);">${session.name}</div>
+            <div style="font-size:13px;font-weight:500;color:var(--color-text);">${escapeHtml(session.name)}</div>
             <button id="logout-btn" class="btn btn--secondary" style="margin-top:6px;padding:5px 12px;font-size:12px;">
               Log out
             </button>
@@ -80,7 +81,7 @@ async function loadCampaigns() {
         <div class="panel campaign-card" data-id="${c._id}" style="margin-bottom:12px;cursor:pointer;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;">
             <div>
-              <div style="font-size:14.5px;font-weight:600;">${c.name}</div>
+              <div style="font-size:14.5px;font-weight:600;">${escapeHtml(c.name)}</div>
               <div style="font-size:12.5px;color:var(--color-text-faint);margin-top:2px;">
                 ${c.sendingMode === "SCHEDULED" ? "Scheduled sending" : "Manual sending"}
               </div>
@@ -121,7 +122,7 @@ async function openCreateCampaignDrawer() {
     return;
   }
 
-  const templateOptions = templates.map((t) => `<option value="${t._id}">${t.name}</option>`).join("");
+  const templateOptions = templates.map((t) => `<option value="${t._id}">${escapeHtml(t.name)}</option>`).join("");
 
   const html = `
     <h2>New campaign</h2>
