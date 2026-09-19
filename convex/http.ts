@@ -468,7 +468,7 @@ http.route({
     const { assignmentId } = await request.json();
     if (!assignmentId) throw new ConvexError("Missing assignmentId.");
 
-    const result = await ctx.runMutation(internal.emailQueue.sendOne, {
+    const result = await ctx.runAction(internal.emailQueue.sendOne, {
       assignmentId: assignmentId as Id<"campaignAssignments">,
     });
     return json(result, 200, request);
@@ -483,7 +483,7 @@ http.route({
     const { campaignId } = await request.json();
     if (!campaignId) throw new ConvexError("Missing campaignId.");
 
-    const result = await ctx.runMutation(internal.emailQueue.sendPendingForCampaign, {
+    const result = await ctx.runAction(internal.emailQueue.sendPendingForCampaign, {
       campaignId: campaignId as Id<"campaigns">,
     });
     return json(result, 200, request);

@@ -56,7 +56,7 @@ function renderShell(session) {
             <p>Manage the staff enrolled in phishing-awareness campaigns.</p>
           </div>
           <div style="text-align:right;">
-            <div style="font-size:13px;font-weight:500;color:var(--color-text);">${escapeHtml(ession.name)}</div>
+            <div style="font-size:13px;font-weight:500;color:var(--color-text);">${escapeHtml(session.name)}</div>
             <button id="logout-btn" class="btn btn--secondary" style="margin-top:6px;padding:5px 12px;font-size:12px;">
               Log out
             </button>

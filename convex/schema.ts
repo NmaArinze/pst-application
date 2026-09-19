@@ -86,6 +86,7 @@ export default defineSchema({
       v.literal("FAILED")
     ),
     sentAt: v.optional(v.number()),
+    lastError: v.optional(v.string()), //set on Failed, for operational troubleshooting
     createdAt: v.number(),
   })
     .index("by_campaignId", ["campaignId"])
