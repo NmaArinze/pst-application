@@ -25,6 +25,14 @@
  * @param {Array<object>} rows - data rows; each needs a unique `_id`
  * @param {(row: object) => void} onRowClick - called with the row's data when clicked
  */
+
+/** Escapes HTML special characters — use before inserting any database-sourced string into innerHTML. */
+export function escapeHtml(value) {
+  const div = document.createElement("div");
+  div.textContent = value ?? "";
+  return div.innerHTML;
+}
+
 export function renderTable(container, columns, rows, onRowClick) {
   if (rows.length === 0) {
     container.innerHTML = `
@@ -38,7 +46,7 @@ export function renderTable(container, columns, rows, onRowClick) {
     .map((row) => {
       const cells = columns
         .map((col) => {
-          const value = col.render ? col.render(row) : (row[col.key] ?? "");
+          const value = col.render ? col.render(row) : escapeHtml(row[col.key]);
           return `<td>${value}</td>`;
         })
         .join("");

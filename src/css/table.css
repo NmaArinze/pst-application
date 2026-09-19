@@ -256,3 +256,8 @@
 .inline-error--visible {
   display: block;
 }
+
+.inline-error--success {
+  color: var(--color-status-success);
+  background: #e7f1ee;
+}

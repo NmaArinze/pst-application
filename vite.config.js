@@ -17,6 +17,8 @@ export default defineConfig({
         templates: resolve(__dirname, "templates.html"),
         campaigns: resolve(__dirname, "campaigns.html"),
         campaignDetail: resolve(__dirname, "campaign-detail.html"),
+        emailQueue: resolve(__dirname, "email-queue.html"),
+        reports: resolve(__dirname, "reports.html"),
       },
     },
   },

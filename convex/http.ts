@@ -16,6 +16,8 @@
  * - convex/participants.ts — participant CRUD (Phase 4)
  * - convex/templates.ts — template CRUD (Phase 5)
  * - convex/campaigns.ts — campaign lifecycle management (Phase 6)
+ * - convex/campaignsAssignments.ts — assign participants to campaigns (Phase 7)
+ * - convex/emailQueue.ts — send emails, plus queue visibility (Phase 8)
  * - convex/lib/authHttp.ts, convex/lib/httpHelpers.ts — shared helpers
  * - src/js/lib/api.js (frontend) — calls these routes
  *
@@ -368,5 +370,125 @@ http.route({
   }),
 });
 http.route({ path: "/campaigns/transition-status", method: "OPTIONS", handler: preflight() });
+
+// ============================================================
+// CAMPAIGN ASSIGNMENT ROUTES (Phase 7)
+// ============================================================
+
+http.route({
+  path: "/campaign-assignments/list",
+  method: "GET",
+  handler: authedRoute(async (ctx, request) => {
+    const url = new URL(request.url);
+    const campaignId = url.searchParams.get("campaignId");
+    if (!campaignId) throw new ConvexError("Missing campaignId.");
+
+    const result = await ctx.runQuery(internal.campaignAssignments.listForCampaign, {
+      campaignId: campaignId as Id<"campaigns">,
+    });
+    return json(result, 200, request);
+  }),
+});
+http.route({ path: "/campaign-assignments/list", method: "OPTIONS", handler: preflight() });
+
+http.route({
+  path: "/campaign-assignments/unassigned",
+  method: "GET",
+  handler: authedRoute(async (ctx, request) => {
+    const url = new URL(request.url);
+    const campaignId = url.searchParams.get("campaignId");
+    if (!campaignId) throw new ConvexError("Missing campaignId.");
+
+    const result = await ctx.runQuery(internal.campaignAssignments.listUnassignedActiveParticipants, {
+      campaignId: campaignId as Id<"campaigns">,
+    });
+    return json(result, 200, request);
+  }),
+});
+http.route({ path: "/campaign-assignments/unassigned", method: "OPTIONS", handler: preflight() });
+
+http.route({
+  path: "/campaign-assignments/assign",
+  method: "POST",
+  handler: authedRoute(async (ctx, request) => {
+    const { campaignId, participantIds } = await request.json();
+    if (!campaignId) throw new ConvexError("Missing campaignId.");
+    if (!Array.isArray(participantIds)) throw new ConvexError("participantIds must be an array.");
+
+    const result = await ctx.runMutation(internal.campaignAssignments.assignParticipants, {
+      campaignId: campaignId as Id<"campaigns">,
+      participantIds: participantIds as Id<"participants">[],
+    });
+    return json(result, 200, request);
+  }),
+});
+http.route({ path: "/campaign-assignments/assign", method: "OPTIONS", handler: preflight() });
+
+// ============================================================
+// EMAIL QUEUE ROUTES (Phase 8 — stubbed send, real Resend in Phase 9)
+// ============================================================
+
+http.route({
+  path: "/email-queue/list",
+  method: "GET",
+  handler: authedRoute(async (ctx, request) => {
+    const url = new URL(request.url);
+    const campaignId = url.searchParams.get("campaignId") || undefined;
+    const emailStatus = url.searchParams.get("emailStatus") || undefined;
+
+    const result = await ctx.runQuery(internal.emailQueue.list, {
+      campaignId: campaignId as Id<"campaigns"> | undefined,
+      emailStatus,
+    });
+    return json(result, 200, request);
+  }),
+});
+http.route({ path: "/email-queue/list", method: "OPTIONS", handler: preflight() });
+
+http.route({
+  path: "/email-queue/summary",
+  method: "GET",
+  handler: authedRoute(async (ctx, request) => {
+    const url = new URL(request.url);
+    const campaignId = url.searchParams.get("campaignId");
+    if (!campaignId) throw new ConvexError("Missing campaignId.");
+
+    const result = await ctx.runQuery(internal.emailQueue.summaryForCampaign, {
+      campaignId: campaignId as Id<"campaigns">,
+    });
+    return json(result, 200, request);
+  }),
+});
+http.route({ path: "/email-queue/summary", method: "OPTIONS", handler: preflight() });
+
+http.route({
+  path: "/email-queue/send-one",
+  method: "POST",
+  handler: authedRoute(async (ctx, request) => {
+    const { assignmentId } = await request.json();
+    if (!assignmentId) throw new ConvexError("Missing assignmentId.");
+
+    const result = await ctx.runMutation(internal.emailQueue.sendOne, {
+      assignmentId: assignmentId as Id<"campaignAssignments">,
+    });
+    return json(result, 200, request);
+  }),
+});
+http.route({ path: "/email-queue/send-one", method: "OPTIONS", handler: preflight() });
+
+http.route({
+  path: "/email-queue/send-pending",
+  method: "POST",
+  handler: authedRoute(async (ctx, request) => {
+    const { campaignId } = await request.json();
+    if (!campaignId) throw new ConvexError("Missing campaignId.");
+
+    const result = await ctx.runMutation(internal.emailQueue.sendPendingForCampaign, {
+      campaignId: campaignId as Id<"campaigns">,
+    });
+    return json(result, 200, request);
+  }),
+});
+http.route({ path: "/email-queue/send-pending", method: "OPTIONS", handler: preflight() });
 
 export default http;
