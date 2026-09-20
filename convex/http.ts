@@ -18,6 +18,7 @@
  * - convex/campaigns.ts — campaign lifecycle management (Phase 6)
  * - convex/campaignsAssignments.ts — assign participants to campaigns (Phase 7)
  * - convex/emailQueue.ts — send emails, plus queue visibility (Phase 8)
+ * - convex/tracking.ts - public click tracking (Phase 10)
  * - convex/lib/authHttp.ts, convex/lib/httpHelpers.ts — shared helpers
  * - src/js/lib/api.js (frontend) — calls these routes
  *
@@ -490,5 +491,68 @@ http.route({
   }),
 });
 http.route({ path: "/email-queue/send-pending", method: "OPTIONS", handler: preflight() });
+
+// ============================================================
+// TRACKING ROUTE (Phase 10)
+// Public, unauthenticated by design. No authedRoute() wrapper —
+// participants never have a session. Returns HTML directly, not JSON.
+// ============================================================
+
+http.route({
+  pathPrefix: "/email/",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const token = url.pathname.split("/email/")[1];
+
+    if (!token) {
+      return renderLandingPage(false);
+    }
+
+    const result = await ctx.runMutation(internal.tracking.recordClick, { token });
+    return renderLandingPage(result.valid);
+  }),
+});
+
+/**
+ * Plain, static awareness page — identical wording regardless of
+ * whether the token was valid, so an invalid/guessed token doesn't
+ * reveal anything about token format or validity through the response.
+ */
+function renderLandingPage(_valid: boolean): Response {
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Security Awareness Notice</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; background: #fff; color: #111; margin: 0; }
+    .wrap { max-width: 480px; margin: 80px auto; padding: 0 24px; text-align: center; }
+    h1 { font-size: 20px; margin-bottom: 12px; }
+    p { font-size: 14px; color: #5b6472; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>This was a simulated phishing exercise</h1>
+    <p>
+      This message was part of an internal security-awareness program run by
+      your organization's IT Security team. No real harm has occurred.
+    </p>
+    <p>
+      In the future, watch for urgency, unexpected requests, and mismatched
+      sender addresses. If you're ever unsure about a real email, report it
+      to IT Security directly rather than clicking any links.
+    </p>
+  </div>
+</body>
+</html>`;
+
+  return new Response(html, {
+    status: 200,
+    headers: { "Content-Type": "text/html; charset=utf-8" },
+  });
+}
 
 export default http;
