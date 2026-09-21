@@ -91,10 +91,16 @@ async function populateCampaignFilter() {
       `<option value="">All campaigns</option>` +
       campaigns.map((c) => `<option value="${c._id}">${escapeHtml(c.name)}</option>`).join("");
 
-    const urlCampaignId = new URLSearchParams(window.location.search).get("campaignId");
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlCampaignId = urlParams.get("campaignId");
     if (urlCampaignId) {
       select.value = urlCampaignId;
       currentFilters.campaignId = urlCampaignId;
+    }
+    const urlEmailStatus = urlParams.get("emailStatus");
+    if (urlEmailStatus) {
+      document.getElementById("status-filter").value = urlEmailStatus;
+      currentFilters.emailStatus = urlEmailStatus;
     }
   } catch (err) {
     console.error("Failed to load campaigns for filter:", err);

@@ -69,7 +69,9 @@ async function loadCampaigns() {
   container.innerHTML = `<div class="table-empty">Loading…</div>`;
 
   try {
-    const campaigns = await apiGet("/campaigns/list", {});
+    const status = new URLSearchParams(window.location.search).get("status") || undefined;
+    const campaigns = await apiGet("/campaigns/list", { status });
+
     if (campaigns.length === 0) {
       container.innerHTML = `<div class="table-empty">No campaigns yet.</div>`;
       return;

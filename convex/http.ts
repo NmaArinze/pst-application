@@ -19,6 +19,7 @@
  * - convex/campaignsAssignments.ts — assign participants to campaigns (Phase 7)
  * - convex/emailQueue.ts — send emails, plus queue visibility (Phase 8)
  * - convex/tracking.ts - public click tracking (Phase 10)
+ * - convex/dashboard.ts - dashboard data (Phase 11)
  * - convex/lib/authHttp.ts, convex/lib/httpHelpers.ts — shared helpers
  * - src/js/lib/api.js (frontend) — calls these routes
  *
@@ -554,5 +555,41 @@ function renderLandingPage(_valid: boolean): Response {
     headers: { "Content-Type": "text/html; charset=utf-8" },
   });
 }
+
+// ============================================================
+// DASHBOARD ROUTES (Phase 11)
+// ============================================================
+
+http.route({
+  path: "/dashboard/summary",
+  method: "GET",
+  handler: authedRoute(async (ctx, request) => {
+    const result = await ctx.runQuery(internal.dashboard.summary, {});
+    return json(result, 200, request);
+  }),
+});
+http.route({ path: "/dashboard/summary", method: "OPTIONS", handler: preflight() });
+
+http.route({
+  path: "/dashboard/recent-activity",
+  method: "GET",
+  handler: authedRoute(async (ctx, request) => {
+    const url = new URL(request.url);
+    const campaignId = url.searchParams.get("campaignId") || undefined;
+    const eventType = url.searchParams.get("eventType") || undefined;
+    const participantId = url.searchParams.get("participantId") || undefined;
+    const sinceDaysParam = url.searchParams.get("sinceDays");
+    const sinceDays = sinceDaysParam ? Number(sinceDaysParam) : undefined;
+
+    const result = await ctx.runQuery(internal.dashboard.recentActivity, {
+      campaignId: campaignId as Id<"campaigns"> | undefined,
+      eventType,
+      participantId: participantId as Id<"participants"> | undefined,
+      sinceDays,
+    });
+    return json(result, 200, request);
+  }),
+});
+http.route({ path: "/dashboard/recent-activity", method: "OPTIONS", handler: preflight() });
 
 export default http;
