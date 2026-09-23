@@ -12,7 +12,7 @@ export function renderSidebar(activePage) {
     { key: "participants", label: "Participants", page: "participants.html", available: true },
     { key: "templates", label: "Templates", page: "templates.html", available: true },
     { key: "emailQueue", label: "Email Queue", page: "email-queue.html", available: true },
-    { key: "reports", label: "Reports", page: "reports.html", available: false },
+    { key: "reports", label: "Reports", page: "reports.html", available: true },
   ];
 
   const navHtml = items

@@ -20,6 +20,7 @@
  * - convex/emailQueue.ts — send emails, plus queue visibility (Phase 8)
  * - convex/tracking.ts - public click tracking (Phase 10)
  * - convex/dashboard.ts - dashboard data (Phase 11)
+ * - convex/reports.ts - reporting data (Phase 12)
  * - convex/lib/authHttp.ts, convex/lib/httpHelpers.ts — shared helpers
  * - src/js/lib/api.js (frontend) — calls these routes
  *
@@ -591,5 +592,40 @@ http.route({
   }),
 });
 http.route({ path: "/dashboard/recent-activity", method: "OPTIONS", handler: preflight() });
+
+// ============================================================
+// REPORTS ROUTE (Phase 12) — resolves the time-range preset to
+// concrete start/end timestamps here, keeping reports.ts range-agnostic.
+// ============================================================
+
+http.route({
+  path: "/reports",
+  method: "GET",
+  handler: authedRoute(async (ctx, request) => {
+    const url = new URL(request.url);
+    const range = url.searchParams.get("range") || "";
+    const customStart = url.searchParams.get("start");
+    const customEnd = url.searchParams.get("end");
+
+    const now = Date.now();
+    const DAY = 24 * 60 * 60 * 1000;
+    let start: number | undefined;
+    let end: number | undefined;
+
+    if (range === "7d") start = now - 7 * DAY;
+    else if (range === "30d") start = now - 30 * DAY;
+    else if (range === "90d") start = now - 90 * DAY;
+    else if (range === "quarter") start = now - 91 * DAY;
+    else if (range === "year") start = now - 365 * DAY;
+    else if (range === "custom") {
+      start = customStart ? Number(customStart) : undefined;
+      end = customEnd ? Number(customEnd) : undefined;
+    }
+
+    const result = await ctx.runQuery(internal.reports.getReports, { start, end });
+    return json(result, 200, request);
+  }),
+});
+http.route({ path: "/reports", method: "OPTIONS", handler: preflight() });
 
 export default http;
