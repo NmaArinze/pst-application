@@ -364,7 +364,7 @@ http.route({
     const { id, toStatus, scheduledAt } = await request.json();
     if (!id) throw new ConvexError("Missing id.");
     if (!toStatus) throw new ConvexError("Missing toStatus.");
-
+    if (toStatus === "SCHEDULED" && !scheduledAt) throw new ConvexError("Missing scheduledAt.");
     const result = await ctx.runMutation(internal.campaigns.transitionStatus, {
       id: id as Id<"campaigns">,
       toStatus,

@@ -25,8 +25,7 @@ const STATUS_LABELS = {
 };
 
 /**
- * Mirrors convex/campaigns.ts's ALLOWED_TRANSITIONS, purely for
- * deciding which buttons to show. The server re-checks this
+ * Mirrors convex/campaigns.ts's ALLOWED_TRANSITIONS, purely for deciding which buttons to show. The server re-checks this
  * independently — this list only controls UI, never enforcement.
  */
 const AVAILABLE_ACTIONS = {
