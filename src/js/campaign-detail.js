@@ -303,15 +303,23 @@ async function handleAssignParticipants(campaignId, drawerEl) {
 }
 
 async function handleTransition(campaignId, toStatus, actionLabel) {
-  const confirmed = await confirmDialog({
-    title: `${actionLabel}?`,
-    message: `Are you sure you want to change this campaign's status to ${STATUS_LABELS[toStatus] || toStatus}?`,
-    confirmLabel: actionLabel,
-  });
-  if (!confirmed) return;
+  let scheduledAt;
+
+  if (toStatus === "SCHEDULED") {
+    const picked = await promptForScheduleTime();
+    if (!picked) return; // cancelled
+    scheduledAt = picked;
+  } else {
+    const confirmed = await confirmDialog({
+      title: `${actionLabel}?`,
+      message: `Are you sure you want to change this campaign's status to ${STATUS_LABELS[toStatus] || toStatus}?`,
+      confirmLabel: actionLabel,
+    });
+    if (!confirmed) return;
+  }
 
   try {
-    await apiPost("/campaigns/transition-status", { id: campaignId, toStatus });
+    await apiPost("/campaigns/transition-status", { id: campaignId, toStatus, scheduledAt });
     await loadCampaign(campaignId);
   } catch (err) {
     const errorEl = document.getElementById("transition-error");
@@ -319,8 +327,44 @@ async function handleTransition(campaignId, toStatus, actionLabel) {
       errorEl.textContent = err.message;
       errorEl.classList.add("inline-error--visible");
     }
-    alert(err.message); // simple fallback here; drawer-style error UI isn't applicable on this page's layout
   }
 }
 
+/** Small inline picker for the Schedule action — returns a timestamp, or null if cancelled. */
+function promptForScheduleTime() {
+  return new Promise((resolve) => {
+    const html = `
+      <h2>Schedule campaign</h2>
+      <div id="schedule-error" class="inline-error"></div>
+      <div class="drawer-field">
+        <label for="scheduledAt">Date and time</label>
+        <input type="datetime-local" id="scheduledAt" required />
+      </div>
+      <div class="drawer-actions">
+        <button id="schedule-confirm-btn" class="btn btn--primary">Schedule</button>
+      </div>`;
+
+    const drawerEl = openDrawer(html, () => resolve(null));
+
+    drawerEl.querySelector("#schedule-confirm-btn").addEventListener("click", () => {
+      const value = drawerEl.querySelector("#scheduledAt").value;
+      const errorEl = drawerEl.querySelector("#schedule-error");
+
+      if (!value) {
+        errorEl.textContent = "Select a date and time.";
+        errorEl.classList.add("inline-error--visible");
+        return;
+      }
+      const ts = new Date(value).getTime();
+      if (ts <= Date.now()) {
+        errorEl.textContent = "Scheduled time must be in the future.";
+        errorEl.classList.add("inline-error--visible");
+        return;
+      }
+
+      closeDrawer();
+      resolve(ts);
+    });
+  });
+}
 init();

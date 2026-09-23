@@ -195,6 +195,7 @@ export const transitionStatus = internalMutation({
       v.literal("COMPLETED"),
       v.literal("CANCELLED")
     ),
+    scheduledAt: v.optional(v.number())
   },
   handler: async (ctx, args) => {
     const campaign = await ctx.db.get(args.id);
@@ -211,9 +212,19 @@ export const transitionStatus = internalMutation({
       );
     }
 
+    if (args.toStatus === "SCHEDULED") {
+      if (!args.scheduledAt) {
+        throw new ConvexError("A scheduled date/time is required for scheduled sending.");
+      }
+      if (args.scheduledAt <= Date.now()) {
+        throw new ConvexError("Scheduled date/time must be in the future.");
+      }
+    }
+
     const now = Date.now();
     const patch: Record<string, unknown> = { status: args.toStatus, updatedAt: now };
 
+    if (args.toStatus === "SCHEDULED") patch.scheduledAt = args.scheduledAt;
     if (args.toStatus === "ACTIVE") patch.launchedAt = now;
     if (args.toStatus === "COMPLETED") patch.completedAt = now;
     if (args.toStatus === "CANCELLED") patch.cancelledAt = now;

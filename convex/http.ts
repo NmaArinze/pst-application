@@ -361,13 +361,14 @@ http.route({
   path: "/campaigns/transition-status",
   method: "POST",
   handler: authedRoute(async (ctx, request) => {
-    const { id, toStatus } = await request.json();
+    const { id, toStatus, scheduledAt } = await request.json();
     if (!id) throw new ConvexError("Missing id.");
     if (!toStatus) throw new ConvexError("Missing toStatus.");
 
     const result = await ctx.runMutation(internal.campaigns.transitionStatus, {
       id: id as Id<"campaigns">,
       toStatus,
+      scheduledAt,
     });
     return json(result, 200, request);
   }),
