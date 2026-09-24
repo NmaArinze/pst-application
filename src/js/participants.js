@@ -32,6 +32,7 @@ import { requireSession, logout } from "./lib/session.js";
 import { apiGet, apiPost } from "./lib/api.js";
 import { confirmDialog } from "./ui/confirmDialog.js";
 import { escapeHtml } from "./ui/table.js";
+import { renderUserBadge } from "./ui/topbar.js"; 
 
 let currentFilters = { search: "", department: "", active: "" };
 
@@ -55,11 +56,8 @@ function renderShell(session) {
             <h1>Participants</h1>
             <p>Manage the staff enrolled in phishing-awareness campaigns.</p>
           </div>
-          <div style="text-align:right;">
-            <div style="font-size:13px;font-weight:500;color:var(--color-text);">${escapeHtml(session.name)}</div>
-            <button id="logout-btn" class="btn btn--secondary" style="margin-top:6px;padding:5px 12px;font-size:12px;">
-              Log out
-            </button>
+          <div>
+            ${renderUserBadge(session)}
           </div>
         </div>
 

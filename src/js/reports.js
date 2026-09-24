@@ -18,6 +18,7 @@ import { renderSidebar, bindSidebarNav } from "./ui/sidebar.js";
 import { escapeHtml } from "./ui/table.js";
 import { requireSession, logout } from "./lib/session.js";
 import { apiGet } from "./lib/api.js";
+import { renderUserBadge } from "./ui/topbar.js";
 
 let currentRange = "30d";
 let customStart = "";
@@ -58,30 +59,7 @@ function renderShell(session) {
             <h1>Reports</h1>
             <p>Campaign, department, and template performance over time.</p>
           </div>
-
-          <div style="text-align:right;">
-            <div
-              style="
-                font-size:13px;
-                font-weight:500;
-                color:var(--color-text);
-              "
-            >
-              ${escapeHtml(String(session.name ?? ""))}
-            </div>
-
-            <button
-              id="logout-btn"
-              class="btn btn--secondary"
-              style="
-                margin-top:6px;
-                padding:5px 12px;
-                font-size:12px;
-              "
-            >
-              Log out
-            </button>
-          </div>
+          <div>${renderUserBadge(session)}</div>
         </div>
 
         <div

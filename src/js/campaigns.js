@@ -13,6 +13,7 @@ import { openDrawer, closeDrawer } from "./ui/drawer.js";
 import { requireSession, logout } from "./lib/session.js";
 import { apiGet, apiPost } from "./lib/api.js";
 import { escapeHtml } from "./ui/table.js";
+import { renderUserBadge } from "./ui/topbar.js";
 
 const STATUS_LABELS = {
   DRAFT: "Draft",
@@ -42,12 +43,7 @@ function renderShell(session) {
             <h1>Campaigns</h1>
             <p>Phishing-awareness exercises — create, review, and launch.</p>
           </div>
-          <div style="text-align:right;">
-            <div style="font-size:13px;font-weight:500;color:var(--color-text);">${escapeHtml(session.name)}</div>
-            <button id="logout-btn" class="btn btn--secondary" style="margin-top:6px;padding:5px 12px;font-size:12px;">
-              Log out
-            </button>
-          </div>
+          <div>${renderUserBadge(session)}</div>
         </div>
 
         <div class="table-toolbar">
@@ -70,21 +66,25 @@ async function loadCampaigns() {
 
   try {
     const status = new URLSearchParams(window.location.search).get("status") || undefined;
-    const campaigns = await apiGet("/campaigns/list", { status });
-
+        const campaigns = await apiGet("/campaigns/list", { status });
     if (campaigns.length === 0) {
-      container.innerHTML = `<div class="table-empty">No campaigns yet.</div>`;
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state__icon">&#128231;</div>
+          <div class="empty-state__title">No campaigns yet</div>
+          <div>Create your first campaign to get started.</div>
+        </div>`;
       return;
     }
 
     container.innerHTML = campaigns
       .map(
         (c) => `
-        <div class="panel campaign-card" data-id="${c._id}" style="margin-bottom:12px;cursor:pointer;">
+                <div class="panel campaign-card" data-id="${c._id}" style="margin-bottom:12px;cursor:pointer;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;">
             <div>
-              <div style="font-size:14.5px;font-weight:600;">${escapeHtml(c.name)}</div>
-              <div style="font-size:12.5px;color:var(--color-text-faint);margin-top:2px;">
+              <div style="font-size:var(--font-size-lg);font-weight:600;">${escapeHtml(c.name)}</div>
+              <div style="font-size:var(--font-size-sm);color:var(--color-text-faint);margin-top:2px;">
                 ${c.sendingMode === "SCHEDULED" ? "Scheduled sending" : "Manual sending"}
               </div>
             </div>

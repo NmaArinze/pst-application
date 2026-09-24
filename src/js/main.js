@@ -13,6 +13,7 @@ import { openDrawer } from "./ui/drawer.js";
 import { escapeHtml } from "./ui/table.js";
 import { requireSession, logout } from "./lib/session.js";
 import { apiGet } from "./lib/api.js";
+import { renderUserBadge } from "./ui/topbar.js";
 
 const EVENT_LABELS = { EMAIL_SENT: "Email sent", LINK_CLICKED: "Link clicked" };
 
@@ -42,11 +43,8 @@ function renderShell(session) {
             <h1>Overview</h1>
             <p>What's happening with your simulations right now.</p>
           </div>
-          <div style="text-align:right;">
-            <div style="font-size:13px;font-weight:500;color:var(--color-text);">${escapeHtml(session.name)}</div>
-            <button id="logout-btn" class="btn btn--secondary" style="margin-top:6px;padding:5px 12px;font-size:12px;">
-              Log out
-            </button>
+          <div>
+            ${renderUserBadge(session)}
           </div>
         </div>
 
@@ -87,8 +85,8 @@ async function loadFilterOptions() {
 
 function statCard({ label, value, href }) {
   const inner = `
-    <div style="font-size:12px;color:var(--color-text-faint);margin-bottom:6px;">${label}</div>
-    <div style="font-size:24px;font-weight:600;font-family:var(--font-mono);">${value}</div>`;
+    <div style="font-size:var(--font-size-sm);color:var(--color-text-faint);margin-bottom:6px;">${label}</div>
+    <div style="font-size:var(--font-size-xl);font-weight:600;font-family:var(--font-mono);">${value}</div>`;  
   if (href) {
     return `<a href="${href}" class="panel" style="display:block;text-decoration:none;color:inherit;">${inner}</a>`;
   }
@@ -197,7 +195,7 @@ function renderActivityTable(rows) {
       </tr>`
         )
         .join("")
-    : `<tr><td colspan="6" style="text-align:center;color:var(--color-text-faint);padding:24px;">No matching activity.</td></tr>`;
+    : `<tr><td colspan="6"><div class="empty-state"><div class="empty-state__icon">&#128203;</div><div class="empty-state__title">No activity yet</div><div>Sent emails and link clicks will appear here.</div></div></td></tr>`;
 
   container.innerHTML = `
     <table class="data-table">

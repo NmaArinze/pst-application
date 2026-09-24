@@ -12,7 +12,8 @@
     "convex:deploy": "convex deploy"
   },
   "dependencies": {
-    "convex": "^1.17.0"
+    "convex": "^1.17.0",
+    "lucide-static": "^1.47.0"
   },
   "devDependencies": {
     "@types/node": "^26.5.1",

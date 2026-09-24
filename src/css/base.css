@@ -80,11 +80,12 @@ h1, h2, h3 {
   font-weight: 500;
   text-align: left;
   cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 
-.nav-item[data-disabled="true"] {
-  color: var(--color-text-faint);
-  cursor: default;
+.nav-item:hover {
+  background: var(--color-sidebar-bg);
+  color: var(--color-text);
 }
 
 .nav-item[aria-current="page"] {
@@ -92,11 +93,25 @@ h1, h2, h3 {
   color: var(--color-accent);
 }
 
-.nav-item__badge {
-  margin-left: auto;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--color-text-faint);
+.nav-item__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.nav-item__icon svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+}
+
+.nav-item__label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sidebar__footer {
@@ -128,6 +143,13 @@ h1, h2, h3 {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-fast);
+}
+
+a.panel:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border-strong);
 }
 
 .btn {
@@ -141,6 +163,16 @@ h1, h2, h3 {
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
+}
+
+.btn:active {
+  opacity: 0.85;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn--primary {
@@ -158,6 +190,11 @@ h1, h2, h3 {
   border: 1px solid var(--color-border);
 }
 
+.btn--secondary:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
 .status-dot {
   display: inline-block;
   width: 8px;
@@ -169,3 +206,154 @@ h1, h2, h3 {
 .status-dot--ok { background: var(--color-status-success); }
 .status-dot--pending { background: var(--color-text-faint); }
 .status-dot--error { background: var(--color-status-danger); }
+
+/* ---- Loading skeleton (optional, opt-in) ---- */
+.skeleton-line {
+  height: 14px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--color-border) 25%, #f0f0f0 37%, var(--color-border) 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ---- User avatar badge ---- */
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ---- Sidebar section labels ---- */
+.sidebar__section-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  padding: 0 var(--space-3);
+  margin: var(--space-2) 0 6px;
+}
+
+/* ---- Form helper text ---- */
+.form-help {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* ---- Styled empty state (upgrade from plain .table-empty text) ---- */
+.empty-state {
+  text-align: center;
+  padding: var(--space-8) var(--space-5);
+  color: var(--color-text-faint);
+  font-size: var(--font-size-base);
+}
+
+.empty-state__icon {
+  font-size: 28px;
+  margin-bottom: var(--space-3);
+  opacity: 0.5;
+}
+
+.empty-state__title {
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+/* ---- Responsive: below ~900px, sidebar becomes icon-only ---- */
+@media (max-width: 900px) {
+  .sidebar {
+    width: 64px;
+    padding: var(--space-5) var(--space-2);
+  }
+
+  .sidebar__brand-name,
+  .sidebar__section-label,
+  .nav-item span:not(.nav-item__badge),
+  .sidebar__footer div:last-child {
+    display: none;
+  }
+
+  .nav-item {
+    justify-content: center;
+    padding: 9px;
+  }
+
+  .main {
+    padding: var(--space-5) var(--space-4);
+  }
+}
+
+@media (max-width: 640px) {
+  .page-header {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+}
+
+/* ---- Form helper text ---- */
+.form-help {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* ---- Styled empty state (upgrade from plain .table-empty text) ---- */
+.empty-state {
+  text-align: center;
+  padding: var(--space-8) var(--space-5);
+  color: var(--color-text-faint);
+  font-size: var(--font-size-base);
+}
+
+.empty-state__icon {
+  font-size: 28px;
+  margin-bottom: var(--space-3);
+  opacity: 0.5;
+}
+
+.empty-state__title {
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+/* ---- Responsive: below ~900px, sidebar becomes icon-only ---- */
+@media (max-width: 900px) {
+  .sidebar {
+    width: 64px;
+    padding: var(--space-5) var(--space-2);
+  }
+
+  .sidebar__brand-name,
+  .sidebar__section-label,
+  .nav-item span:not(.nav-item__badge),
+  .sidebar__footer div:last-child {
+    display: none;
+  }
+
+  .nav-item {
+    justify-content: center;
+    padding: 9px;
+  }
+
+  .main {
+    padding: var(--space-5) var(--space-4);
+  }
+}

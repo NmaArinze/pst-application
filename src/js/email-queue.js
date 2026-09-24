@@ -14,6 +14,7 @@ import { showFeedback } from "./ui/feedback.js";
 import { escapeHtml } from "./ui/table.js";
 import { requireSession, logout } from "./lib/session.js";
 import { apiGet, apiPost } from "./lib/api.js";
+import { renderUserBadge } from "./ui/topbar.js";
 
 let currentFilters = { campaignId: "", emailStatus: "" };
 
@@ -38,12 +39,7 @@ function renderShell(session) {
             <h1>Email Queue</h1>
             <p>Review and send campaign emails across all campaigns.</p>
           </div>
-          <div style="text-align:right;">
-            <div style="font-size:13px;font-weight:500;color:var(--color-text);">${escapeHtml(session.name)}</div>
-            <button id="logout-btn" class="btn btn--secondary" style="margin-top:6px;padding:5px 12px;font-size:12px;">
-              Log out
-            </button>
-          </div>
+          <div>${renderUserBadge(session)}</div>
         </div>
 
         <div id="queue-feedback" class="inline-error"></div>

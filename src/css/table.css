@@ -52,6 +52,10 @@
   cursor: pointer;
 }
 
+.data-table tbody tr {
+  transition: background var(--transition-fast);
+}
+
 .data-table tbody tr:hover {
   background: var(--color-accent-soft);
 }
@@ -104,9 +108,10 @@
   align-items: center;
   gap: 5px;
   padding: 3px 9px;
-  border-radius: var(--radius-sm);
+  border-radius: 12px;
   font-size: 12px;
   font-weight: 500;
+  letter-spacing: 0.2px;
 }
 
 .status-pill--active {
@@ -260,4 +265,22 @@
 .inline-error--success {
   color: var(--color-status-success);
   background: #e7f1ee;
+}
+/* ---- Consistent form control sizing (used by toolbars, filters, forms) ---- */
+.table-toolbar select,
+.table-toolbar input[type="text"],
+.table-toolbar input[type="date"] {
+  font-size: var(--font-size-sm);
+}
+
+@media (max-width: 640px) {
+  .table-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .data-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
 }

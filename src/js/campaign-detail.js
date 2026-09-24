@@ -14,6 +14,7 @@ import { requireSession, logout } from "./lib/session.js";
 import { apiGet, apiPost } from "./lib/api.js";
 import { escapeHtml } from "./ui/table.js";
 import { openDrawer , closeDrawer } from "./ui/drawer.js";
+import { renderUserBadge } from "./ui/topbar.js";
 
 const STATUS_LABELS = {
   DRAFT: "Draft",
@@ -73,12 +74,7 @@ function renderShell(session) {
             <a href="campaigns.html" style="font-size:12.5px;color:var(--color-text-faint);">&larr; Back to campaigns</a>
             <h1 id="campaign-title" style="margin-top:4px;">Loading…</h1>
           </div>
-          <div style="text-align:right;">
-            <div style="font-size:13px;font-weight:500;color:var(--color-text);">${escapeHtml(session.name)}</div>
-            <button id="logout-btn" class="btn btn--secondary" style="margin-top:6px;padding:5px 12px;font-size:12px;">
-              Log out
-            </button>
-          </div>
+          <div>${renderUserBadge(session)}</div>
         </div>
         <div id="campaign-body"></div>
       </main>
