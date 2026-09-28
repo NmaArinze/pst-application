@@ -79,3 +79,32 @@ export async function sendViaResend(args: SendEmailArgs): Promise<{ resendId: st
   const data = await response.json();
   return { resendId: data.id };
 }
+
+/**
+ * Sends a plain HTML email (not a saved Resend Template) — used for
+ * transactional messages PST authors itself, like password resets.
+ * Same credentials/from-address as sendViaResend, different Resend
+ * API call shape (raw html instead of template+variables).
+ */
+export async function sendPlainEmail(args: { to: string; subject: string; html: string }): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY;
+  const fromEmail = process.env.PST_FROM_EMAIL;
+  if (!apiKey) throw new Error("RESEND_API_KEY is not configured.");
+  if (!fromEmail) throw new Error("PST_FROM_EMAIL is not configured.");
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: `PST Security <${fromEmail}>`,
+      to: args.to,
+      subject: args.subject,
+      html: args.html,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text().catch(() => "");
+    throw new Error(`Resend API error (${response.status}): ${errorBody}`);
+  }
+}

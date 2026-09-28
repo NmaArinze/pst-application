@@ -69,7 +69,10 @@ function renderLoginForm() {
                 <input type="email" id="email" name="email" required autocomplete="username" placeholder="name@company.com" />
               </div>
               <div class="auth-field auth-field--password">
-                <label for="password">Password</label>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <label for="password" style="margin-bottom:0;">Password</label>
+                  <a href="forgot-password.html" style="font-size:11.5px;color:var(--color-accent);font-weight:500;">Forgot password?</a>
+                </div>
                 <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter your password" />
                 <button type="button" id="toggle-password" class="auth-password-toggle" aria-label="Toggle password visibility">
                   ${sizeIcon(eyeIcon)}

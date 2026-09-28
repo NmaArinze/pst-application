@@ -629,4 +629,42 @@ http.route({
 });
 http.route({ path: "/reports", method: "OPTIONS", handler: preflight() });
 
+http.route({
+  path: "/auth/forgot-password",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const cors = corsHeaders(request);
+    try {
+      const { email } = await request.json();
+      await ctx.runAction(internal.auth.sendPasswordResetEmail, { email });
+    } catch (err) {
+      // Never let a failure here leak anything — same generic response either way.
+      console.error("forgot-password error:", err);
+    }
+    return json(
+      { message: "If an account exists for this email, we've sent instructions to reset your password." },
+      200,
+      request
+    );
+  }),
+});
+http.route({ path: "/auth/forgot-password", method: "OPTIONS", handler: preflight() });
+
+http.route({
+  path: "/auth/reset-password",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const cors = corsHeaders(request);
+    try {
+      const { token, newPassword } = await request.json();
+      await ctx.runMutation(internal.auth.resetPasswordWithToken, { token, newPassword });
+      return json({ status: "reset" }, 200, request);
+    } catch (err: any) {
+      const message = err instanceof ConvexError ? (err.data as string) : "Could not reset password.";
+      return json({ error: message }, 400, request);
+    }
+  }),
+});
+http.route({ path: "/auth/reset-password", method: "OPTIONS", handler: preflight() });
+
 export default http;

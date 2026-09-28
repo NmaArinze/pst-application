@@ -3,6 +3,10 @@
 
 import { internalMutation, internalQuery, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { internalAction } from "./_generated/server"; // add to the existing import line
+import { sendPlainEmail } from "./lib/resend";          // new import
+
+
 
 // Business rule (not a secret) — sessions expire after 30 minutes.
 const SESSION_DURATION_MS = 30 * 60 * 1000;
@@ -157,5 +161,100 @@ export const logout = internalMutation({
     }
 
     return { status: "logged_out" };
+  },
+});
+
+const RESET_TOKEN_DURATION_MS = 30 * 60 * 1000; // 30 minutes
+
+/**
+ * Creates a reset token for the given email if an active administrator
+ * account exists — returns null otherwise. Never throws for "not
+ * found," so the caller (the action below) can always respond
+ * generically regardless of outcome, per the "don't reveal whether an
+ * account exists" requirement.
+ */
+export const createPasswordResetToken = internalMutation({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    const admin = await ctx.db
+      .query("administrators")
+      .withIndex("by_email", (q) => q.eq("email", args.email.trim().toLowerCase()))
+      .unique();
+
+    if (!admin || !admin.active) return null;
+
+    // Invalidate any previous unused tokens for this admin, so only
+    // the most recent reset link is ever valid.
+    const existing = await ctx.db
+      .query("passwordResetTokens")
+      .withIndex("by_administratorId", (q) => q.eq("administratorId", admin._id))
+      .collect();
+    for (const t of existing) {
+      if (!t.used) await ctx.db.patch(t._id, { used: true });
+    }
+
+    const token = generateToken();
+    await ctx.db.insert("passwordResetTokens", {
+      administratorId: admin._id,
+      token,
+      purpose: "PASSWORD_RESET",
+      expiresAt: Date.now() + RESET_TOKEN_DURATION_MS,
+      used: false,
+      createdAt: Date.now(),
+    });
+
+    return { token, email: admin.email, name: admin.name };
+  },
+});
+
+/**
+ * Orchestrates the full forgot-password flow: create a token (or not,
+ * if no such account), then send the email if one was created. The
+ * HTTP route always responds with the same generic message either
+ * way — this action's job is just to do the real work quietly.
+ */
+export const sendPasswordResetEmail = internalAction({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    const result = await ctx.runMutation(internal.auth.createPasswordResetToken, { email: args.email });
+    if (!result) return; // no such account — silently do nothing, by design
+
+    const frontendOrigin = process.env.PST_FRONTEND_ORIGIN;
+    const resetUrl = `${frontendOrigin}/reset-password.html?token=${result.token}`;
+
+    await sendPlainEmail({
+      to: result.email,
+      subject: "Reset your PST password",
+      html: `
+        <p>Hello ${result.name},</p>
+        <p>A password reset was requested for your PST administrator account. This link expires in 30 minutes and can only be used once.</p>
+        <p><a href="${resetUrl}">Reset your password</a></p>
+        <p>If you didn't request this, you can safely ignore this email.</p>`,
+    });
+  },
+});
+
+/** Validates a reset token and, if valid, updates the password and consumes the token. */
+export const resetPasswordWithToken = internalMutation({
+  args: { token: v.string(), newPassword: v.string() },
+  handler: async (ctx, args) => {
+    if (args.newPassword.length < 8) {
+      throw new ConvexError("Password must be at least 8 characters.");
+    }
+
+    const tokenRow = await ctx.db
+      .query("passwordResetTokens")
+      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .unique();
+
+    if (!tokenRow || tokenRow.used || tokenRow.expiresAt < Date.now()) {
+      throw new ConvexError("This reset link is invalid or has expired.");
+    }
+
+    const passwordHash = await hashPassword(args.newPassword);
+    await ctx.db.patch(tokenRow.administratorId, { passwordHash });
+    await ctx.db.patch(tokenRow._id, { used: true });
+
+    return { status: "reset" };
   },
 });

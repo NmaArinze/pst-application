@@ -109,4 +109,17 @@ export default defineSchema({
     .index("by_assignmentId", ["assignmentId"])
     .index("by_type", ["type"])
     .index("by_occurredAt", ["occurredAt"]),
+
+    passwordResetTokens: defineTable({
+    administratorId: v.id("administrators"),
+    token: v.string(),
+    purpose: v.union(v.literal("PASSWORD_RESET"), v.literal("ACCOUNT_ACTIVATION")),
+    expiresAt: v.number(),
+    used: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_token", ["token"])
+    .index("by_administratorId", ["administratorId"]),
+
 });
+

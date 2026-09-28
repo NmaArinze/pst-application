@@ -19,6 +19,8 @@ export default defineConfig({
         campaignDetail: resolve(__dirname, "campaign-detail.html"),
         emailQueue: resolve(__dirname, "email-queue.html"),
         reports: resolve(__dirname, "reports.html"),
+        forgotPassword: resolve(__dirname, "forgot-password.html"),
+        resetPassword: resolve(__dirname, "reset-password.html"),
         
       },
     },
