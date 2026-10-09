@@ -1,0 +1,45 @@
+/**
+ * src/css/pages.css
+ * Page-specific rules that don't belong in the shared components.
+ * Imported after base.css and table.css by the page scripts.
+ * Batch 3 adds the campaign / participant / template / email-queue rules.
+ */
+
+/* ---- Overview ---- */
+.activity-table {
+  position: relative;
+}
+
+/* ---- Reports: click-rate-by-campaign chart ---- */
+.chart-svg {
+  width: 100%;
+  height: auto;
+  max-width: 720px;
+}
+
+.chart-axis {
+  stroke: var(--color-border);
+}
+
+.chart-line {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2;
+}
+
+.chart-dot {
+  fill: var(--color-accent);
+}
+
+.chart-label {
+  font-size: 10px;
+  fill: var(--color-text-faint);
+}
+
+.chart-label--middle {
+  text-anchor: middle;
+}
+
+.chart-label--end {
+  text-anchor: end;
+}

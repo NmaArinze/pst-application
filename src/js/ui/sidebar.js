@@ -2,8 +2,7 @@
  * src/js/ui/sidebar.js
  * Shared sidebar: icon + label nav on desktop, icon-only with
  * accessible labels/tooltips below 900px. Icons from lucide-static
- * (raw SVG, no framework needed) — see vite.config.js for the ?raw
- * import support this relies on.
+ * (raw SVG via Vite's ?raw import). Styling lives in base.css.
  */
 
 import layoutDashboardIcon from "lucide-static/icons/layout-dashboard.svg?raw";
@@ -16,7 +15,7 @@ import logOutIcon from "lucide-static/icons/log-out.svg?raw";
 
 /** Strips the default width/height from lucide's SVG so our CSS controls sizing. */
 function sizeIcon(svg) {
-  return svg.replace(/width="24"/, '').replace(/height="24"/, '');
+  return svg.replace(/width="24"/, "").replace(/height="24"/, "");
 }
 
 const ICONS = {
@@ -56,18 +55,16 @@ export function renderSidebar(activePage) {
     <aside class="sidebar">
       <div class="sidebar__brand">
         <span class="sidebar__brand-mark">&#128737;</span>
-        <span class="sidebar__brand-name" style="color:var(--color-accent);font-size:16px;">PST</span>
+        <span class="sidebar__brand-name">PST</span>
       </div>
       <div class="sidebar__section-label">Workspace</div>
       <nav class="sidebar__nav">${navHtml}</nav>
       <div class="sidebar__footer">
-        <button id="logout-btn" class="nav-item" aria-label="Sign out" title="Sign out">
+        <button id="logout-btn" class="nav-item nav-item--logout" aria-label="Sign out" title="Sign out">
           <span class="nav-item__icon">${sizeIcon(logOutIcon)}</span>
           <span class="nav-item__label">Sign out</span>
         </button>
-        <div style="font-size:11px;color:var(--color-text-faint);margin-top:8px;" class="sidebar__footer-text">
-          Phishing Simulation Test
-        </div>
+        <div class="sidebar__footer-text">Phishing Simulation Test</div>
       </div>
     </aside>`;
 }

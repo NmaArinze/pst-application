@@ -284,3 +284,78 @@
     white-space: nowrap;
   }
 }
+
+/* ---- Sortable column headers (Reports) ---- */
+.data-table th.th-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ---- Inline column-header filters (Overview) ---- */
+.th-filterable {
+  position: relative;
+}
+
+.th-label {
+  cursor: pointer;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.th-label__chevron {
+  font-size: 9px;
+  color: var(--color-text-faint);
+}
+
+.th-label__chevron.is-active {
+  color: var(--color-accent);
+}
+
+.th-popover {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 50;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 190px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 4px;
+  margin-top: 4px;
+}
+
+.th-popover.is-open {
+  display: block;
+}
+
+.th-popover-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 7px 10px;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 12.5px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.th-popover-option.is-selected {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+/* ---- Date inputs inside the toolbar (Reports custom range) ---- */
+.table-toolbar input[type="date"] {
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+}

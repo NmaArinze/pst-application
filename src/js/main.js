@@ -1,25 +1,34 @@
 /**
  * src/js/main.js
- * Overview / Dashboard page: 5 clickable summary cards + a recent
- * activity table with inline column-header filters (Campaign,
- * Participant, Event, Date range) — click a header to open its filter
- * dropdown, no separate toolbar. Computed live from convex/dashboard.ts.
+ * Overview page: 5 summary cards + recent-activity table with inline
+ * column-header filters (campaign, participant, event, date range).
+ * Data from convex/dashboard.ts via /dashboard/*. Styling lives in
+ * components.css, table.css and pages.css.
  */
 
 import "../css/base.css";
 import "../css/table.css";
+import "../css/pages.css";
 import { renderSidebar, bindSidebarNav } from "./ui/sidebar.js";
+import { renderUserBadge } from "./ui/topbar.js";
 import { openDrawer } from "./ui/drawer.js";
 import { escapeHtml } from "./ui/table.js";
 import { requireSession, logout } from "./lib/session.js";
 import { apiGet } from "./lib/api.js";
-import { renderUserBadge } from "./ui/topbar.js";
 
 const EVENT_LABELS = { EMAIL_SENT: "Email sent", LINK_CLICKED: "Link clicked" };
+
+const FILTER_KEY_BY_COL = {
+  campaign: "campaignId",
+  participant: "participantId",
+  event: "eventType",
+  date: "sinceDays",
+};
 
 let activityFilters = { campaignId: "", eventType: "", participantId: "", sinceDays: "" };
 let campaignsCache = [];
 let participantsCache = [];
+let lastActivityRows = [];
 let openPopoverCol = null;
 
 async function init() {
@@ -38,25 +47,21 @@ function renderShell(session) {
     <div class="app-shell">
       ${renderSidebar("overview")}
       <main class="main">
-        <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div class="page-header">
           <div>
             <h1>Overview</h1>
             <p>What's happening with your simulations right now.</p>
           </div>
-          <div>
-            ${renderUserBadge(session)}
-          </div>
+          <div>${renderUserBadge(session)}</div>
         </div>
 
-        <div id="summary-cards" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;">
+        <div id="summary-cards" class="stat-grid stat-grid--5">
           <div class="table-empty">Loading…</div>
         </div>
 
-        <div class="panel" style="padding:0;">
-          <div style="padding:14px 18px;border-bottom:1px solid var(--color-border);">
-            <div style="font-size:14px;font-weight:600;">Recent activity</div>
-          </div>
-          <div id="activity-table" style="position:relative;"></div>
+        <div class="panel panel--flush">
+          <div class="panel__header">Recent activity</div>
+          <div id="activity-table" class="activity-table"></div>
         </div>
       </main>
     </div>`;
@@ -64,8 +69,7 @@ function renderShell(session) {
   bindSidebarNav(app);
   document.getElementById("logout-btn").addEventListener("click", logout);
 
-  // Event delegation on the persistent container — safe across
-  // repeated innerHTML swaps inside loadActivity().
+  // Event delegation on the persistent container survives innerHTML swaps.
   document.getElementById("activity-table").addEventListener("click", handleTableClick);
   document.addEventListener("click", handleOutsideClick);
 }
@@ -85,12 +89,13 @@ async function loadFilterOptions() {
 
 function statCard({ label, value, href }) {
   const inner = `
-    <div style="font-size:var(--font-size-sm);color:var(--color-text-faint);margin-bottom:6px;">${label}</div>
-    <div style="font-size:var(--font-size-xl);font-weight:600;font-family:var(--font-mono);">${value}</div>`;  
+    <div class="stat-card__label">${label}</div>
+    <div class="stat-card__value">${value}</div>`;
+
   if (href) {
-    return `<a href="${href}" class="panel" style="display:block;text-decoration:none;color:inherit;">${inner}</a>`;
+    return `<a href="${href}" class="panel stat-card stat-card--link">${inner}</a>`;
   }
-  return `<div class="panel">${inner}</div>`;
+  return `<div class="panel stat-card">${inner}</div>`;
 }
 
 async function loadSummary() {
@@ -110,7 +115,6 @@ async function loadSummary() {
   }
 }
 
-/** Column filter definitions: which columns get a header dropdown, and their options. */
 function getColumnOptions(col) {
   if (col === "campaign") {
     return [{ value: "", label: "All campaigns" }, ...campaignsCache.map((c) => ({ value: c._id, label: c.name }))];
@@ -139,45 +143,31 @@ function getColumnOptions(col) {
   return [];
 }
 
-const FILTER_KEY_BY_COL = {
-  campaign: "campaignId",
-  participant: "participantId",
-  event: "eventType",
-  date: "sinceDays",
-};
-
 function renderFilterableHeader(col, label) {
   const filterKey = FILTER_KEY_BY_COL[col];
   const isActive = Boolean(activityFilters[filterKey]);
   const isOpen = openPopoverCol === col;
 
-  const options = getColumnOptions(col);
-  const optionsHtml = options
+  const optionsHtml = getColumnOptions(col)
     .map((opt) => {
       const selected = (activityFilters[filterKey] || "") === opt.value;
-      return `<button type="button" class="th-popover-option" data-col="${col}" data-value="${escapeHtml(opt.value)}"
-        style="display:block;width:100%;text-align:left;padding:7px 10px;border:none;background:${selected ? "var(--color-accent-soft)" : "transparent"};color:${selected ? "var(--color-accent)" : "var(--color-text)"};font-size:12.5px;cursor:pointer;border-radius:4px;">
-        ${escapeHtml(opt.label)}
-      </button>`;
+      return `<button type="button" class="th-popover-option${selected ? " is-selected" : ""}" data-col="${col}" data-value="${escapeHtml(opt.value)}">${escapeHtml(opt.label)}</button>`;
     })
     .join("");
 
   return `
-    <th style="position:relative;">
-      <span class="th-label" data-col="${col}" style="cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:4px;">
+    <th class="th-filterable">
+      <span class="th-label" data-col="${col}">
         ${label}
-        <span style="font-size:9px;color:${isActive ? "var(--color-accent)" : "var(--color-text-faint)"};">&#9662;</span>
+        <span class="th-label__chevron${isActive ? " is-active" : ""}">&#9662;</span>
       </span>
-      <div class="th-popover" data-popover="${col}"
-        style="display:${isOpen ? "block" : "none"};position:absolute;top:100%;left:0;z-index:50;background:#fff;border:1px solid var(--color-border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.1);min-width:190px;max-height:260px;overflow-y:auto;padding:4px;margin-top:4px;">
+      <div class="th-popover${isOpen ? " is-open" : ""}" data-popover="${col}">
         ${optionsHtml}
       </div>
     </th>`;
 }
 
-let lastActivityRows = [];
-
-/** Builds and inserts the table HTML from already-fetched rows — no network call. Used both after a real fetch and when just toggling a popover open/closed. */
+/** Draws the table from already-fetched rows: no network call. */
 function renderActivityTable(rows) {
   const container = document.getElementById("activity-table");
 
@@ -191,7 +181,7 @@ function renderActivityTable(rows) {
         <td>${escapeHtml(r.department)}</td>
         <td><span class="status-pill ${r.eventType === "LINK_CLICKED" ? "status-pill--inactive" : "status-pill--active"}">${EVENT_LABELS[r.eventType] || r.eventType}</span></td>
         <td>${new Date(r.occurredAt).toLocaleDateString()}</td>
-        <td><button class="btn btn--secondary view-btn" data-event-id="${r.eventId}" style="padding:4px 10px;font-size:12px;">View</button></td>
+        <td><button class="btn btn--secondary btn--sm view-btn" data-event-id="${r.eventId}">View</button></td>
       </tr>`
         )
         .join("")
@@ -218,7 +208,7 @@ function renderActivityTable(rows) {
   });
 }
 
-/** Actually fetches from the server — only called when a filter value truly changes. */
+/** Fetches from the server: only called when a filter value actually changes. */
 async function loadActivity() {
   const container = document.getElementById("activity-table");
   container.innerHTML = `<div class="table-empty">Loading…</div>`;
@@ -244,18 +234,16 @@ function handleTableClick(e) {
     e.stopPropagation();
     const col = label.dataset.col;
     openPopoverCol = openPopoverCol === col ? null : col;
-    renderActivityTable(lastActivityRows); // just toggling — no fetch
+    renderActivityTable(lastActivityRows); // toggle only, no fetch
     return;
   }
 
   const option = e.target.closest(".th-popover-option");
   if (option) {
     e.stopPropagation();
-    const col = option.dataset.col;
-    const filterKey = FILTER_KEY_BY_COL[col];
-    activityFilters[filterKey] = option.dataset.value;
+    activityFilters[FILTER_KEY_BY_COL[option.dataset.col]] = option.dataset.value;
     openPopoverCol = null;
-    loadActivity(); // a real filter changed — fetch new data
+    loadActivity(); // a real filter changed
   }
 }
 
@@ -263,7 +251,7 @@ function handleOutsideClick(e) {
   if (!openPopoverCol) return;
   if (e.target.closest(".th-popover") || e.target.closest(".th-label")) return;
   openPopoverCol = null;
-  renderActivityTable(lastActivityRows); // just closing — no fetch
+  renderActivityTable(lastActivityRows);
 }
 
 function openActivityDrawer(row) {
@@ -274,7 +262,7 @@ function openActivityDrawer(row) {
     <div class="drawer-field"><label>Department</label><div>${escapeHtml(row.department)}</div></div>
     <div class="drawer-field"><label>Date/time</label><div>${new Date(row.occurredAt).toLocaleString()}</div></div>
     <div class="drawer-actions">
-      <a href="campaign-detail.html?id=${row.campaignId}" class="btn btn--primary" style="text-decoration:none;">View campaign</a>
+      <a href="campaign-detail.html?id=${row.campaignId}" class="btn btn--primary">View campaign</a>
     </div>`);
 }
 

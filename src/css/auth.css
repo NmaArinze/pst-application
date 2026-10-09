@@ -5,6 +5,7 @@
  * approved Stitch design mockup — no Tailwind, reuses existing tokens.
  */
 @import "./tokens.css";
+@import "./components.css";
 
 .auth-shell {
   min-height: 100vh;
@@ -315,4 +316,62 @@
   padding: 12px 0;
   font-size: 11.5px;
   color: rgba(255, 255, 255, 0.4);
+}
+
+/* ---- Login: mobile brand name, label row with forgot-password link ---- */
+.auth-main-panel__header-mobile-brand-name {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.auth-field__label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.auth-field .auth-field__label-row label {
+  margin-bottom: 0;
+}
+
+.auth-field__link {
+  font-size: 11.5px;
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+/* ---- Forgot / reset password pages ---- */
+.auth-main-panel--centered {
+  margin: 0 auto;
+}
+
+.auth-card__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.auth-card__brand-name {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.auth-card__back {
+  text-align: center;
+  margin-top: 18px;
+}
+
+.auth-card__back a {
+  font-size: 12.5px;
+}
+
+.auth-card__note {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.auth-error--success {
+  color: var(--color-status-success);
+  background: #e7f1ee;
 }

@@ -1,0 +1,110 @@
+/**
+ * src/css/components.css
+ * Shared, page-independent UI pieces: state utilities, links, brand mark.
+ * Expects tokens.css to be loaded by the importing stylesheet.
+ * Imported by base.css (app pages) and auth.css (auth pages).
+ */
+
+/* ---- State utilities (toggled from JS via classList) ---- */
+.is-hidden {
+  display: none !important;
+}
+
+/* ---- Links ---- */
+.link-accent {
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.link-subtle {
+  color: var(--color-text-faint);
+}
+
+/* ---- Compact brand mark (shield in an accent square) ---- */
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.brand-mark svg {
+  width: 16px;
+  height: 16px;
+  stroke: #ffffff;
+}
+
+/* ---- Panels ---- */
+.panel.panel--flush {
+  padding: 0;
+}
+
+.panel--spaced {
+  margin-bottom: 16px;
+}
+
+.panel__header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.panel__title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+/* ---- Stat cards ---- */
+.stat-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.stat-grid--5 {
+  grid-template-columns: repeat(5, 1fr);
+  margin-bottom: 24px;
+}
+
+.stat-grid--4 {
+  grid-template-columns: repeat(4, 1fr);
+  margin-bottom: 20px;
+}
+
+.stat-card__label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-faint);
+  margin-bottom: 6px;
+}
+
+.stat-card__value {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+
+.stat-card--link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Larger variant, used on Reports (matches its previous sizing) */
+.stat-card--lg .stat-card__label {
+  font-size: 12px;
+}
+
+.stat-card--lg .stat-card__value {
+  font-size: 24px;
+}
+
+/* ---- Small button ---- */
+.btn.btn--sm {
+  padding: 4px 10px;
+  font-size: 12px;
+}

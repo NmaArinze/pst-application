@@ -1,8 +1,7 @@
 /**
  * src/js/login.js
- * Login page — two-panel visual layout (dark brand panel + light auth
- * card), reusing the existing real /auth/login fetch flow unchanged.
- * Password visibility toggle is the only new interactive element.
+ * Login page: two-panel layout (brand panel + auth card). The real
+ * /auth/login fetch flow is unchanged; styling lives in auth.css.
  */
 
 import "../css/auth.css";
@@ -24,11 +23,11 @@ function renderLoginForm() {
     <div class="auth-shell">
       <aside class="auth-brand-panel">
         <div class="auth-brand-panel__pattern">
-          <svg width="420" height="420" viewBox="0 0 400 400" fill="none" stroke="currentColor">
-            <path d="M200 40 L340 90 V210 C340 295 200 360 200 360 C200 360 60 295 60 210 V90 Z" stroke-dasharray="4 4" stroke-width="1.2"/>
-            <path d="M200 70 L310 110 V205 C310 270 200 325 200 325 C200 325 90 270 90 205 V110 Z" stroke-width="1.5"/>
-            <line x1="200" y1="70" x2="200" y2="325" stroke-width="0.8"/>
-            <line x1="90" y1="205" x2="310" y2="205" stroke-width="0.8"/>
+          <svg class="auth-pattern" viewBox="0 0 400 400">
+            <path class="auth-pattern__outline" d="M200 40 L340 90 V210 C340 295 200 360 200 360 C200 360 60 295 60 210 V90 Z"/>
+            <path class="auth-pattern__shield" d="M200 70 L310 110 V205 C310 270 200 325 200 325 C200 325 90 270 90 205 V110 Z"/>
+            <line class="auth-pattern__line" x1="200" y1="70" x2="200" y2="325"/>
+            <line class="auth-pattern__line" x1="90" y1="205" x2="310" y2="205"/>
           </svg>
         </div>
         <div class="auth-brand-panel__mark">
@@ -51,9 +50,9 @@ function renderLoginForm() {
         <header class="auth-main-panel__header">
           <div class="auth-main-panel__header-mobile-brand">
             <div class="auth-main-panel__header-mobile-brand-icon">${sizeIcon(shieldIcon)}</div>
-            <span style="font-weight:700;color:#ffffff;">PST</span>
+            <span class="auth-main-panel__header-mobile-brand-name">PST</span>
           </div>
-          </header>
+        </header>
 
         <div class="auth-card-wrap">
           <div class="auth-card">
@@ -69,9 +68,9 @@ function renderLoginForm() {
                 <input type="email" id="email" name="email" required autocomplete="username" placeholder="name@company.com" />
               </div>
               <div class="auth-field auth-field--password">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                  <label for="password" style="margin-bottom:0;">Password</label>
-                  <a href="forgot-password.html" style="font-size:11.5px;color:var(--color-accent);font-weight:500;">Forgot password?</a>
+                <div class="auth-field__label-row">
+                  <label for="password">Password</label>
+                  <a href="forgot-password.html" class="auth-field__link">Forgot password?</a>
                 </div>
                 <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter your password" />
                 <button type="button" id="toggle-password" class="auth-password-toggle" aria-label="Toggle password visibility">
@@ -118,8 +117,8 @@ function clearError() {
   document.getElementById("auth-error").classList.remove("auth-error--visible");
 }
 
-// Unchanged real authentication flow — same endpoint, same credentials
-// handling, same redirect, as before this visual redesign.
+// Real authentication flow — same endpoint, credentials handling and
+// redirect as before the visual redesign.
 async function handleSubmit(event) {
   event.preventDefault();
   clearError();

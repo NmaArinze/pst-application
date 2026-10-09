@@ -1,4 +1,5 @@
 @import "./tokens.css";
+@import "./components.css";
 
 * {
   box-sizing: border-box;
@@ -57,6 +58,7 @@ h1, h2, h3 {
   font-weight: 700;
   font-size: 15px;
   letter-spacing: 0.2px;
+  color: var(--color-accent);
 }
 
 .sidebar__nav {
@@ -128,6 +130,9 @@ h1, h2, h3 {
 }
 
 .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: var(--space-5);
 }
 
@@ -356,4 +361,30 @@ a.panel:hover {
   .main {
     padding: var(--space-5) var(--space-4);
   }
+}
+
+/* ---- Sidebar footer ---- */
+.sidebar__footer-text {
+  font-size: 11px;
+  color: var(--color-text-faint);
+  margin-top: 8px;
+}
+
+/* Sign-out keeps its muted colour on hover (matches the previous inline behaviour) */
+.nav-item--logout,
+.nav-item--logout:hover {
+  color: var(--color-text-muted);
+}
+
+/* ---- User badge (top-right of every page) ---- */
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-badge__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
 }

@@ -48,15 +48,17 @@ function inRange(
   return true;
 }
 
-function calculateClickRate(
+
+function calculatePassRate(
   clicks: number,
   sent: number
 ) {
   if (sent <= 0) {
-    return 0;
+    return 100;
   }
 
-  return Math.round((clicks / sent) * 100);
+  const validClicks = Math.min(Math.max(clicks, 0), sent);
+  return Math.round(((sent - validClicks) / sent) * 100);
 }
 
 export const getReports = internalQuery({
@@ -197,7 +199,7 @@ export const getReports = internalQuery({
 
         clickCount: stat.clicks,
 
-        clickRate: calculateClickRate(
+        clickRate: calculatePassRate(
           stat.clicks,
           stat.sent
         ),
@@ -262,7 +264,7 @@ export const getReports = internalQuery({
 
         clickCount: stat.clicks,
 
-        clickRate: calculateClickRate(
+        clickRate: calculatePassRate(
           stat.clicks,
           stat.sent
         ),
@@ -365,7 +367,7 @@ export const getReports = internalQuery({
 
         clickCount: stat.clicks,
 
-        clickRate: calculateClickRate(
+        clickRate: calculatePassRate(
           stat.clicks,
           stat.sent
         ),
@@ -442,8 +444,8 @@ export const getReports = internalQuery({
     const summary = {
       totalEmailsSent,
 
-      overallClickRate:
-        calculateClickRate(
+      passRate:
+        calculatePassRate(
           totalClicks,
           totalEmailsSent
         ),
